@@ -311,6 +311,112 @@ object TemplateRepository {
             decorativeEmoji = "💎",
             cornerDecorEmoji = "✨"
         )
+        ,
+        PhotoTemplate(
+            id = "good_night_moonlight",
+            name = "Moonlight Good Night",
+            category = TemplateCategory.FESTIVAL,
+            subCategory = "Good Night",
+            headerTitle = "🌙 GOOD NIGHT 🌙",
+            defaultGreeting = "Let the moonlight bring you peaceful dreams.",
+            footerQuote = "#GoodNight #SweetDreams",
+            gradientColors = listOf(0xFF0F172A, 0xFF312E81, 0xFF818CF8),
+            frameShape = "rounded",
+            decorativeEmoji = "🌙",
+            cornerDecorEmoji = "✨"
+        ),
+        PhotoTemplate(
+            id = "hindi_suvichar",
+            name = "Hindi Suvichar",
+            category = TemplateCategory.STYLISH,
+            subCategory = "Hindi Suvichar",
+            headerTitle = "✨ आज का सुविचार ✨",
+            defaultGreeting = "सकारात्मक सोच और निरंतर प्रयास सफलता की राह बनाते हैं।",
+            footerQuote = "#सुविचार #प्रेरणा",
+            gradientColors = listOf(0xFF78350F, 0xFFB45309, 0xFFFDE68A),
+            frameShape = "rounded",
+            decorativeEmoji = "🌼",
+            cornerDecorEmoji = "✨"
+        ),
+        PhotoTemplate(
+            id = "hindi_shayari",
+            name = "Dil Se Shayari",
+            category = TemplateCategory.STYLISH,
+            subCategory = "Hindi Shayari",
+            headerTitle = "❤️ दिल की बात ❤️",
+            defaultGreeting = "कुछ एहसास लफ़्ज़ों में नहीं, बस दिल में रहते हैं।",
+            footerQuote = "#Shayari #DilSe",
+            gradientColors = listOf(0xFF4C0519, 0xFF9F1239, 0xFFF9A8D4),
+            frameShape = "rounded",
+            decorativeEmoji = "🌹",
+            cornerDecorEmoji = "💗"
+        ),
+        PhotoTemplate(
+            id = "devotional_blessings",
+            name = "Divine Blessings",
+            category = TemplateCategory.FESTIVAL,
+            subCategory = "Devotional",
+            headerTitle = "🙏 शुभ आशीर्वाद 🙏",
+            defaultGreeting = "आपके जीवन में शांति, प्रेम और सुख-समृद्धि बनी रहे।",
+            footerQuote = "#Blessings #PositiveVibes",
+            gradientColors = listOf(0xFF7C2D12, 0xFFEA580C, 0xFFFDE68A),
+            frameShape = "circle",
+            decorativeEmoji = "🪔",
+            cornerDecorEmoji = "🙏"
+        ),
+        PhotoTemplate(
+            id = "retro_vintage",
+            name = "Retro Vintage Memories",
+            category = TemplateCategory.STYLISH,
+            subCategory = "Retro & Vintage",
+            headerTitle = "📸 TIMELESS MEMORIES",
+            defaultGreeting = "Some moments become memories; some stay forever.",
+            footerQuote = "#RetroStyle #Memories",
+            gradientColors = listOf(0xFF713F12, 0xFFB45309, 0xFFFDE68A),
+            frameShape = "rect",
+            decorativeEmoji = "🎞️",
+            cornerDecorEmoji = "✨"
+        ),
+        PhotoTemplate(
+            id = "travel_diaries",
+            name = "Travel Diary",
+            category = TemplateCategory.STYLISH,
+            subCategory = "Travel & Lifestyle",
+            headerTitle = "🌍 COLLECT MOMENTS",
+            defaultGreeting = "Travel far enough to meet a new version of yourself.",
+            footerQuote = "#TravelDiaries #ExploreMore",
+            gradientColors = listOf(0xFF164E63, 0xFF0E7490, 0xFF67E8F9),
+            frameShape = "rect",
+            decorativeEmoji = "✈️",
+            cornerDecorEmoji = "🌴"
+        ),
+        PhotoTemplate(
+            id = "birthday_celebration_luxe",
+            name = "Birthday Celebration Luxe",
+            category = TemplateCategory.FESTIVAL,
+            subCategory = "Birthday",
+            headerTitle = "🎂 HAPPY BIRTHDAY 🎂",
+            defaultGreeting = "Wishing you a year filled with laughter, love and beautiful surprises!",
+            footerQuote = "#BirthdayWishes #CelebrateYou",
+            gradientColors = listOf(0xFF701A75, 0xFFBE185D, 0xFFF9A8D4),
+            frameShape = "rounded",
+            decorativeEmoji = "🎁",
+            cornerDecorEmoji = "🎉"
+        ),
+        PhotoTemplate(
+            id = "motivation_new_day",
+            name = "New Day Motivation",
+            category = TemplateCategory.STYLISH,
+            subCategory = "Motivational Quotes",
+            headerTitle = "🔥 KEEP MOVING FORWARD 🔥",
+            defaultGreeting = "Small steps every day can lead to extraordinary changes.",
+            footerQuote = "#Motivation #NeverGiveUp",
+            gradientColors = listOf(0xFF172554, 0xFF1D4ED8, 0xFF60A5FA),
+            frameShape = "rounded",
+            decorativeEmoji = "🌅",
+            cornerDecorEmoji = "⭐"
+        )
+
     )
 
     val TRENDING_DESIGNS: List<PhotoTemplate> by lazy {
