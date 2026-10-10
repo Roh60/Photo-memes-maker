@@ -77,7 +77,6 @@ import coil.compose.AsyncImage
 import com.example.data.model.MemeTemplateRepository
 import com.example.data.model.TemplateRepository
 import com.example.data.repository.CreationsRepository
-import com.example.ui.components.MonetizationBanner
 import com.example.ui.privacy.PrivacyPolicyDialog
 import com.example.util.BitmapUtils
 import kotlinx.coroutines.launch
@@ -148,7 +147,7 @@ fun HomeScreen(
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
-                            text = "Pro Studio • 100% Offline & Private",
+                            text = "Photo & Meme Creator",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -433,7 +432,6 @@ fun HomeScreen(
         }
 
         // Monetization Banner (Creator Pro)
-        MonetizationBanner()
 
         Spacer(modifier = Modifier.height(24.dp))
     }

@@ -44,6 +44,22 @@ jobs:
             -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
+      - name: Block removed promotional claims
+        shell: bash
+        run: |
+          set +e
+          git grep -n -I -E 'Pro Studio feature enabled|Pro Studio|Unlimited 100% HD export|Unlimited HD exports|100% offline|offline & private' -- app/src
+          result=$?
+          set -e
+          if [ "$result" -eq 0 ]; then
+            echo "ERROR: Removed promotional claims found in app source."
+            exit 1
+          elif [ "$result" -ne 1 ]; then
+            echo "ERROR: Source scan failed with exit code $result."
+            exit "$result"
+          fi
+          echo "PASS: No removed promotional claims in tracked app source."
+
       - name: Build debug APK
         run: gradle :app:assembleDebug
 

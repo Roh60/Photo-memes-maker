@@ -40,17 +40,17 @@ fun PrivacyPolicyDialog(onDismiss: () -> Unit) {
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "Your Privacy is 100% Protected",
+                    text = "Your Privacy Matters",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "• On-Device Processing: All photo filters, editing adjustments, festival templates, and meme creations are processed 100% locally on your device.\n" +
-                            "• Zero Cloud Upload: Your personal photos, gallery selections, and camera captures are NEVER uploaded to any remote server or external cloud.\n" +
-                            "• Local Storage Only: Saved artworks and local drafts remain securely stored in your phone's storage. You can delete individual items or clear all drafts anytime.\n" +
-                            "• Standard Permissions: Camera and media picker permissions are requested solely when you choose to take a photo or select an image from your device.\n" +
-                            "• Native Sharing: When you share an image, it uses Android's native system share sheet directly between your installed apps.",
+                    text = "• On-Device Editing: Photo editing and meme creation workflows are designed to process images on your device.\n" +
+                            "• Photo Sharing: Images shared through Android system sharing may be handled by the app or service you select under its own privacy policy.\n" +
+                            "• Saved Creations: Creations saved by the app are stored in its designated device storage. You can delete saved items using the available app controls.\n" +
+                            "• Permissions: Camera access is requested when you choose to take a photo. Image selection uses Android photo picker where supported.\n" +
+                            "• Network and Third-Party Services: Included libraries or future features may have different data practices. Network-connected behavior must be reviewed before making privacy guarantees.",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
