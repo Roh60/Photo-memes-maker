@@ -41,3 +41,7 @@ The source archive does not include the Gradle wrapper scripts/JAR, and this env
 This additive update keeps the existing photo, collage, meme, template, camera, and creations flows in place and adds a Home entry for **Daily Greetings & Quotes**. The new screen includes category filters (Daily, Quotes, Festivals, Celebrations), original greeting designs, a live preview, optional name personalization, optional photo selection, and image sharing through Android's share sheet. The greeting image is generated locally and shared from the app cache; no new media-hosting service or third-party API is required.
 
 Build/device verification is still required in Android Studio because this environment does not have Gradle or an Android SDK available. Please test opening the new screen, selecting a photo, and sharing to WhatsApp or another target app.
+
+---
+
+# Photo-memes-maker
