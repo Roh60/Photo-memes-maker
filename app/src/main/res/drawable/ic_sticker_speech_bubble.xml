@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="80dp"
+    android:viewportWidth="96"
+    android:viewportHeight="80">
+    <!-- Comic Speech Bubble with Tail -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M12,8 h72 a8,8 0 0,1 8,8 v42 a8,8 0 0,1 -8,8 h-36 L24,78 L28,66 h-16 a8,8 0 0,1 -8,-8 v-42 a8,8 0 0,1 8,-8 z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,11 h68 a6,6 0 0,1 6,6 v38 a6,6 0 0,1 -6,6 h-34 L28,71 L31,61 h-17 a6,6 0 0,1 -6,-6 v-38 a6,6 0 0,1 6,-6 z" />
+    <!-- Three Cartoon Dots -->
+    <path
+        android:fillColor="#424242"
+        android:pathData="M32,36 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M48,36 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M64,36 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+</vector>

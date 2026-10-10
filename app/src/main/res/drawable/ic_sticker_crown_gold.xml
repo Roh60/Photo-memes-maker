@@ -1,0 +1,41 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="80dp"
+    android:viewportWidth="96"
+    android:viewportHeight="80">
+    <!-- Golden King Meme Crown -->
+    <!-- Crown Base -->
+    <path
+        android:fillColor="#E5A800"
+        android:pathData="M16,60 L80,60 L78,68 L18,68 Z" />
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M16,60 L12,24 L32,44 L48,16 L64,44 L84,24 L80,60 Z" />
+    <!-- Highlights -->
+    <path
+        android:fillColor="#FFF176"
+        android:pathData="M48,16 L54,36 L48,46 L42,36 Z" />
+    <!-- Jewels -->
+    <!-- Center Red Ruby -->
+    <path
+        android:fillColor="#E53935"
+        android:pathData="M48,64 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <!-- Left Jewel -->
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M28,64 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <!-- Right Jewel -->
+    <path
+        android:fillColor="#43A047"
+        android:pathData="M68,64 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <!-- Crown Tips Pearls -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,24 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,16 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M84,24 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+</vector>

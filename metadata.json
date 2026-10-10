@@ -1,0 +1,6 @@
+{
+  "name": "Photo & Memes Maker",
+  "description": "All-in-one photo editor, festival & stylish templates, 2-photo frames, and custom meme generator with filters, stickers, and export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

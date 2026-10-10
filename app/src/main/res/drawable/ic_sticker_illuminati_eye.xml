@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Illuminati Pyramid Eye Meme Sticker -->
+    <!-- Triangle Outline Shadow -->
+    <path
+        android:fillColor="#33691E"
+        android:pathData="M48,8 L88,80 L8,80 Z" />
+    <path
+        android:fillColor="#8BC34A"
+        android:pathData="M48,16 L80,74 L16,74 Z" />
+    <!-- Golden Eye Sclera -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,52 Q48,34 68,52 Q48,70 28,52 Z" />
+    <!-- Eye Iris -->
+    <path
+        android:fillColor="#00BCD4"
+        android:pathData="M48,52 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0" />
+    <!-- Pupil -->
+    <path
+        android:fillColor="#212121"
+        android:pathData="M48,52 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <!-- Highlight -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,49 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <!-- Sun Rays on Top -->
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M46,2 h4 v4 h-4 z M28,10 L31,13 L28,15 L25,12 Z M68,10 L71,13 L68,15 L65,12 Z" />
+</vector>

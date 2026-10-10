@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Fire Flame Meme Sticker -->
+    <!-- Red Outer Flame -->
+    <path
+        android:fillColor="#E64A19"
+        android:pathData="M48,8 C48,8 30,30 30,52 C30,72 40,88 48,88 C56,88 66,72 66,52 C66,30 48,8 48,8 Z" />
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M52,14 C52,14 74,38 74,60 C74,78 62,90 48,90 C34,90 22,78 22,60 C22,44 32,32 38,24 C38,32 44,40 48,40 C52,40 54,30 52,14 Z" />
+    <!-- Orange Middle Flame -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M50,34 C50,34 66,50 66,66 C66,78 58,86 48,86 C38,86 30,78 30,66 C30,54 38,44 44,38 C44,44 48,48 50,48 C52,48 52,42 50,34 Z" />
+    <!-- Yellow Core Flame -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M48,52 C48,52 56,62 56,72 C56,80 52,84 48,84 C44,84 40,80 40,72 C40,64 45,58 48,52 Z" />
+</vector>

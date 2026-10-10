@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="40dp"
+    android:viewportWidth="96"
+    android:viewportHeight="40">
+    <!-- 8-Bit Pixel "Deal With It" Thug Life Glasses -->
+    <!-- Frame Bar across top -->
+    <path
+        android:fillColor="#111111"
+        android:pathData="M8,12 h80 v6 h-80 z" />
+    <!-- Left Lens -->
+    <path
+        android:fillColor="#111111"
+        android:pathData="M12,18 h32 v16 h-32 z" />
+    <!-- Right Lens -->
+    <path
+        android:fillColor="#111111"
+        android:pathData="M52,18 h32 v16 h-32 z" />
+    <!-- Bridge -->
+    <path
+        android:fillColor="#111111"
+        android:pathData="M44,14 h8 v6 h-8 z" />
+    <!-- Pixel Specular Highlights Left -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,20 h6 v6 h-6 z M22,28 h6 v4 h-6 z" />
+    <!-- Pixel Specular Highlights Right -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,20 h6 v6 h-6 z M62,28 h6 v4 h-6 z" />
+</vector>

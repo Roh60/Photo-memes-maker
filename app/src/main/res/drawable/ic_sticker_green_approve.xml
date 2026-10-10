@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Big Green "YES / APPROVED" Badge -->
+    <path
+        android:fillColor="#43A047"
+        android:pathData="M48,48 m-40,0 a40,40 0 1,0 80,0 a40,40 0 1,0 -80,0" />
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M48,48 m-34,0 a34,34 0 1,0 68,0 a34,34 0 1,0 -68,0" />
+    <!-- White Bold Checkmark -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,66 L20,48 L28,40 L38,50 L68,20 L76,28 Z" />
+</vector>

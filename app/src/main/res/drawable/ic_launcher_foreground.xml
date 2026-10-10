@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Camera Body Card -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M32,36 h12 l4,-6 h12 l4,6 h12 c4.4,0 8,3.6 8,8 v28 c0,4.4 -3.6,8 -8,8 H32 c-4.4,0 -8,-3.6 -8,-8 V44 c0,-4.4 3.6,-8 8,-8 z" />
+    <!-- Outer Lens Ring -->
+    <path
+        android:fillColor="#4F46E5"
+        android:pathData="M54,43 A15,15 0 1,1 53.99,43 Z" />
+    <!-- Inner Lens Ring -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,47 A11,11 0 1,0 54.01,47 Z" />
+    <!-- Meme Smile Sparkle in Lens -->
+    <path
+        android:fillColor="#EC4899"
+        android:pathData="M48,56 Q54,64 60,56 Q54,60 48,56 Z" />
+    <!-- Eye dots -->
+    <path
+        android:fillColor="#EC4899"
+        android:pathData="M49,52 A2,2 0 1,1 49,51.9 Z M59,52 A2,2 0 1,1 59,51.9 Z" />
+    <!-- Flash Light Indicator -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M68,41 A3,3 0 1,1 68,40.9 Z" />
+    <!-- Creative Magic Sparkle 1 -->
+    <path
+        android:fillColor="#FEF08A"
+        android:pathData="M76,28 Q78,33 83,35 Q78,37 76,42 Q74,37 69,35 Q74,33 76,28 Z" />
+    <!-- Creative Magic Sparkle 2 -->
+    <path
+        android:fillColor="#67E8F9"
+        android:pathData="M27,62 Q28.5,65 32,66 Q28.5,67 27,70 Q25.5,67 22,66 Q25.5,65 27,62 Z" />
+</vector>

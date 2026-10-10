@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Red "CERTIFIED DANK" / Meme Approval Stamp -->
+    <!-- Outer Double Stamp Border -->
+    <path
+        android:fillColor="#D32F2F"
+        android:pathData="M48,48 m-44,0 a44,44 0 1,0 88,0 a44,44 0 1,0 -88,0 M48,48 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0" />
+    <path
+        android:fillColor="#D32F2F"
+        android:pathData="M48,48 m-34,0 a34,34 0 1,0 68,0 a34,34 0 1,0 -68,0 M48,48 m-31,0 a31,31 0 1,1 62,0 a31,31 0 1,1 -62,0" />
+    <!-- Center Banner -->
+    <path
+        android:fillColor="#D32F2F"
+        android:pathData="M16,36 h64 v24 h-64 z" />
+    <!-- Center White Text Emulation / Stars -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,48 L28,40 L32,48 L28,45 Z M48,42 L52,48 L48,54 L44,48 Z M64,48 L68,40 L72,48 L68,45 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,44 h24 v8 h-24 z" />
+    <!-- Five Small Stamp Stars on Top Arc -->
+    <path
+        android:fillColor="#D32F2F"
+        android:pathData="M48,22 L50,26 L54,26 L51,28 L52,32 L48,30 L44,32 L45,28 L42,26 L46,26 Z" />
+    <path
+        android:fillColor="#D32F2F"
+        android:pathData="M48,74 L50,70 L54,70 L51,68 L52,64 L48,66 L44,64 L45,68 L42,70 L46,70 Z" />
+</vector>

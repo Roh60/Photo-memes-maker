@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="40dp"
+    android:viewportWidth="96"
+    android:viewportHeight="40">
+    <!-- Classic Gentleman Handlebar Mustache -->
+    <path
+        android:fillColor="#212121"
+        android:pathData="M48,16 C42,10 32,8 20,8 C12,8 4,14 4,20 C4,26 10,28 16,24 C26,18 36,20 44,28 C46,30 47,30 48,30 C49,30 50,30 52,28 C60,20 70,18 80,24 C86,28 92,26 92,20 C92,14 84,8 76,8 C64,8 54,10 48,16 Z" />
+</vector>

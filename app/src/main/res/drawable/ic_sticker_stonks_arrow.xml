@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Stonks Upward Diagonal Arrow Meme Badge -->
+    <!-- Circular Dark Slate Background -->
+    <path
+        android:fillColor="#263238"
+        android:pathData="M48,48 m-44,0 a44,44 0 1,0 88,0 a44,44 0 1,0 -88,0" />
+    <!-- Rising Chart Line Zigzag -->
+    <path
+        android:fillColor="#00E676"
+        android:pathData="M16,70 L34,54 L50,62 L74,28 L84,34 L82,18 L66,22 L74,28 L48,54 L34,46 L14,64 Z" />
+    <!-- Grid guidelines -->
+    <path
+        android:fillColor="#37474F"
+        android:pathData="M20,32 h56 v2 h-56 z M20,48 h56 v2 h-56 z M20,64 h56 v2 h-56 z" />
+</vector>
