@@ -14,6 +14,7 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.net.Uri
+import android.util.Log
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -33,25 +34,62 @@ object BitmapUtils {
      */
     suspend fun decodeUriToBitmap(context: Context, uri: Uri, maxDimension: Int = 1920): Bitmap? =
         withContext(Dispatchers.IO) {
-            if (maxDimension < 1) return@withContext null
+            if (maxDimension < 1) {
+                Log.e("PhotoDecode", "Invalid maxDimension")
+                return@withContext null
+            }
+
+            var stage = "bounds stream open"
             try {
-                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                val bounds = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+
                 context.contentResolver.openInputStream(uri)?.use { input ->
                     BitmapFactory.decodeStream(input, null, bounds)
-                } ?: return@withContext null
+                } ?: run {
+                    Log.e("PhotoDecode", "Input stream is null at bounds stage")
+                    return@withContext null
+                }
 
-                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@withContext null
-                val sampleSize = calculateInSampleSize(bounds.outWidth, bounds.outHeight, maxDimension)
+                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+                    Log.e(
+                        "PhotoDecode",
+                        "Invalid image bounds: ${bounds.outWidth}x${bounds.outHeight}; mime=${bounds.outMimeType}"
+                    )
+                    return@withContext null
+                }
+
+                val sampleSize = calculateInSampleSize(
+                    bounds.outWidth, bounds.outHeight, maxDimension
+                )
                 val decodeOptions = BitmapFactory.Options().apply {
                     inSampleSize = sampleSize
                     inPreferredConfig = Bitmap.Config.ARGB_8888
                 }
-                context.contentResolver.openInputStream(uri)?.use { input ->
+
+                stage = "bitmap decode"
+                val bitmap = context.contentResolver.openInputStream(uri)?.use { input ->
                     BitmapFactory.decodeStream(input, null, decodeOptions)
                 }
-            } catch (_: Exception) {
+
+                if (bitmap == null) {
+                    Log.e(
+                        "PhotoDecode",
+                        "BitmapFactory returned null; bounds=${bounds.outWidth}x${bounds.outHeight}, mime=${bounds.outMimeType}, sample=$sampleSize"
+                    )
+                } else {
+                    Log.d(
+                        "PhotoDecode",
+                        "Decode success: ${bitmap.width}x${bitmap.height}, mime=${bounds.outMimeType}"
+                    )
+                }
+                bitmap
+            } catch (e: Exception) {
+                Log.e("PhotoDecode", "Failed at $stage (${e.javaClass.simpleName})")
                 null
-            } catch (_: OutOfMemoryError) {
+            } catch (e: OutOfMemoryError) {
+                Log.e("PhotoDecode", "Out of memory at $stage")
                 null
             }
         }
