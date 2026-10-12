@@ -2,6 +2,7 @@ package com.example.ui.home
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -108,7 +109,15 @@ fun HomeScreen(
         if (uri != null) {
             scope.launch {
                 val bmp = BitmapUtils.decodeUriToBitmap(context, uri)
-                onOpenPhotoStudioWithBitmap(bmp)
+                if (bmp != null) {
+                    onOpenPhotoStudioWithBitmap(bmp)
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Photo load nahi hui. Dusri image try karein.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }

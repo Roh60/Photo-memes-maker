@@ -142,6 +142,7 @@ fun PhotoStudioScreen(
     var sourceBitmap by remember {
         mutableStateOf<Bitmap?>(initialBitmap ?: SampleImages.createScenicSample(800, 800, "Sunset Glow"))
     }
+
     var isComparingOriginal by remember { mutableStateOf(false) }
     var isProcessing by remember { mutableStateOf(false) }
 
@@ -149,6 +150,16 @@ fun PhotoStudioScreen(
     var adjustment by remember { mutableStateOf(PhotoAdjustment()) }
     var history by remember { mutableStateOf(listOf(PhotoAdjustment())) }
     var historyIndex by remember { mutableIntStateOf(0) }
+
+    // Keep the editor in sync when a new gallery/camera bitmap arrives.
+    LaunchedEffect(initialBitmap) {
+        if (initialBitmap != null && initialBitmap !== sourceBitmap) {
+            sourceBitmap = initialBitmap
+            adjustment = PhotoAdjustment()
+            history = listOf(PhotoAdjustment())
+            historyIndex = 0
+        }
+    }
 
     // Aspect ratio: 1.0 (1:1), 0.8 (4:5), 1.777 (16:9), 0.5625 (9:16)
     var selectedAspectRatio by remember { mutableFloatStateOf(1.0f) }
@@ -207,14 +218,29 @@ fun PhotoStudioScreen(
         if (uri != null) {
             scope.launch {
                 isProcessing = true
-                val bmp = BitmapUtils.decodeUriToBitmap(context, uri)
-                if (bmp != null) {
-                    sourceBitmap = bmp
-                    adjustment = PhotoAdjustment()
-                    history = listOf(PhotoAdjustment())
-                    historyIndex = 0
+                try {
+                    val bmp = BitmapUtils.decodeUriToBitmap(context, uri)
+                    if (bmp != null) {
+                        sourceBitmap = bmp
+                        adjustment = PhotoAdjustment()
+                        history = listOf(PhotoAdjustment())
+                        historyIndex = 0
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Photo decode nahi hui. Dusri image try karein.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                } catch (_: Exception) {
+                    Toast.makeText(
+                        context,
+                        "Photo load karte waqt error aaya.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } finally {
+                    isProcessing = false
                 }
-                isProcessing = false
             }
         }
     }
