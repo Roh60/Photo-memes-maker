@@ -31,6 +31,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -50,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.MemeTemplate
 import com.example.data.model.MemeTemplateRepository
+import com.example.data.model.StickerLibrary
 import com.example.ui.components.StudioTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,6 +64,7 @@ fun MemeTemplatesCatalogScreen(
     BackHandler { onNavigateBack() }
 
     var selectedCategory by remember { mutableStateOf("All") }
+    var showStickerSheet by remember { mutableStateOf(false) }
     val templates = remember(selectedCategory) {
         MemeTemplateRepository.getTemplatesByCategory(selectedCategory)
     }
@@ -114,6 +117,18 @@ fun MemeTemplatesCatalogScreen(
                 }
             }
 
+            // Sticker Assets Library (merged into Meme Maker)
+            OutlinedButton(
+                onClick = { showStickerSheet = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .testTag("meme_sticker_library_btn"),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("\uD83C\uDFAD Sticker Library (${StickerLibrary.DRAWABLE_STICKERS.size})", fontWeight = FontWeight.Bold)
+            }
+
             // Grid of Meme Templates
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -130,6 +145,20 @@ fun MemeTemplatesCatalogScreen(
                 }
             }
         }
+    }
+
+    if (showStickerSheet) {
+        StickerPickerModalBottomSheet(
+            onDismissRequest = { showStickerSheet = false },
+            onSelectDrawableSticker = {
+                showStickerSheet = false
+                onCreateBlankMeme()
+            },
+            onSelectEmojiSticker = {
+                showStickerSheet = false
+                onCreateBlankMeme()
+            }
+        )
     }
 }
 

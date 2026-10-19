@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.res.painterResource
 import com.example.data.model.StickerLibrary
-import com.example.ui.mememaker.StickerPickerModalBottomSheet
 import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -117,7 +116,6 @@ fun HomeScreen(
     val repository = remember { CreationsRepository(context) }
     val creations by repository.allCreations.collectAsState(initial = emptyList())
     var showPrivacyDialog by remember { mutableStateOf(false) }
-    var showStickerSheet by remember { mutableStateOf(false) }
 
     // Direct Camera and Gallery launchers from Home Screen
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -136,22 +134,6 @@ fun HomeScreen(
     ) { bmp: Bitmap? ->
         if (bmp != null) {
             onOpenPhotoStudioWithBitmap(bmp)
-        }
-    }
-
-    // Direct Dual-Photo Gallery Launcher to pick 2 photos and combine them
-    val dualGalleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 2)
-    ) { uris: List<Uri> ->
-        if (uris.isNotEmpty()) {
-            scope.launch {
-                val bitmaps = uris.mapNotNull { BitmapUtils.decodeUriToBitmap(context, it) }
-                if (bitmaps.isNotEmpty()) {
-                    onOpenCollageWithBitmaps(bitmaps, "2_side_by_side")
-                } else {
-                    onOpenTwoPhotoFrame()
-                }
-            }
         }
     }
 
@@ -325,7 +307,7 @@ fun HomeScreen(
                     subtitle = "Punchlines & Humor",
                     emoji = "😂",
                     bgColor = 0xFFF59E0B,
-                    onClick = { onOpenMemeStudio(null) },
+                    onClick = onOpenMemesCatalog,
                     modifier = Modifier.weight(1f).testTag("tile_meme_studio")
                 )
                 HomeHubTile(
@@ -335,110 +317,6 @@ fun HomeScreen(
                     bgColor = 0xFF10B981,
                     onClick = { onOpenQuotesMaker(null, null, null) },
                     modifier = Modifier.weight(1f).testTag("tile_quotes_studio")
-                )
-            }
-            Card(
-                modifier = Modifier.fillMaxWidth().clickable { onOpenDailyGreetings() }.testTag("tile_daily_greetings"),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(Brush.linearGradient(listOf(Color(0xFFFF8A65), Color(0xFFEC4899)))), contentAlignment = Alignment.Center) {
-                        Text("🎉", fontSize = 28.sp)
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Daily Greetings & Quotes", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                        Text("Add your name/photo and share beautiful wishes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Open greetings")
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Dual-Photo Collage Frames Section
-        SectionHeader(
-            title = "🖼️ Dual-Photo Collage Frames",
-            actionText = "Open Studio",
-            onAction = onOpenTwoPhotoFrame
-        )
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp)
-                .testTag("home_dual_collage_banner"),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .background(
-                            brush = Brush.linearGradient(listOf(Color(0xFFEC4899), Color(0xFF8B5CF6))),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("🖼️", fontSize = 22.sp)
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Combine Two Photos",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Select 2 photos from gallery to combine into a stylish layout",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = {
-                        dualGalleryLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.testTag("home_pick_dual_photos_btn")
-                ) {
-                    Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Select 2", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-
-        // Horizontal Carousel of Dual-Photo Collage Frames
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            val dualTemplates = remember { CollageTemplateRepository.getDualPhotoTemplates() }
-            dualTemplates.forEach { tpl ->
-                HomeDualFrameCarouselCard(
-                    template = tpl,
-                    onClick = { onOpenCollageWithTemplate(tpl.id) }
                 )
             }
         }
@@ -524,6 +402,16 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Inspire Me")
                     }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = { onOpenDailyGreetings() },
+                    modifier = Modifier.fillMaxWidth().testTag("home_greetings_btn"),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("🎉 Daily Greetings (add name & photo)")
                 }
             }
         }
@@ -678,59 +566,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Popular Meme Formats Section
-        SectionHeader(
-            title = "🔥 Popular Meme Formats",
-            actionText = "All Formats",
-            onAction = onOpenMemesCatalog
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MemeTemplateRepository.TEMPLATES.take(5).forEach { meme ->
-                HomeMemeCarouselCard(
-                    title = meme.title,
-                    topText = meme.defaultTopText,
-                    category = meme.category,
-                    graphicType = meme.sampleGraphicType,
-                    onClick = { onOpenMemeStudio(meme.id) }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Meme Sticker Assets Library Section
-        SectionHeader(
-            title = "🎭 Meme Sticker Assets Library",
-            actionText = "Browse (${StickerLibrary.DRAWABLE_STICKERS.size})",
-            onAction = { showStickerSheet = true }
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            StickerLibrary.DRAWABLE_STICKERS.forEach { sticker ->
-                HomeStickerCarouselCard(
-                    name = sticker.name,
-                    category = sticker.category,
-                    resId = sticker.resId,
-                    onClick = {
-                        onOpenMemeStudio(null)
-                    }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Recent Creations Banner (if user has saved items)
         if (creations.isNotEmpty()) {
             SectionHeader(
@@ -779,20 +614,6 @@ fun HomeScreen(
 
     if (showPrivacyDialog) {
         PrivacyPolicyDialog(onDismiss = { showPrivacyDialog = false })
-    }
-
-    if (showStickerSheet) {
-        StickerPickerModalBottomSheet(
-            onDismissRequest = { showStickerSheet = false },
-            onSelectDrawableSticker = {
-                showStickerSheet = false
-                onOpenMemeStudio(null)
-            },
-            onSelectEmojiSticker = {
-                showStickerSheet = false
-                onOpenMemeStudio(null)
-            }
-        )
     }
 }
 

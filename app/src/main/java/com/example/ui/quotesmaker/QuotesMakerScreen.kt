@@ -127,6 +127,7 @@ fun QuotesMakerScreen(
     initialQuoteId: String? = null,
     initialFrameStyle: QuoteFrameStyle? = null,
     initialTemplateId: String? = null,
+    onOpenGreetings: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     BackHandler { onNavigateBack() }
@@ -506,6 +507,14 @@ fun QuotesMakerScreen(
                 title = "Quotes Frame Studio",
                 onBack = onNavigateBack,
                 actions = {
+                    // Daily Greetings Studio
+                    IconButton(
+                        onClick = onOpenGreetings,
+                        modifier = Modifier.testTag("quote_greetings_btn")
+                    ) {
+                        Text("🎉")
+                    }
+
                     // Random quote shuffle
                     IconButton(
                         onClick = {

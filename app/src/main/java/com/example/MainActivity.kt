@@ -285,6 +285,7 @@ fun MainAppContainer() {
                             initialQuoteId = targetScreen.initialQuoteId,
                             initialFrameStyle = initialFrame,
                             initialTemplateId = targetScreen.initialTemplateId,
+                            onOpenGreetings = { navigateTo(Screen.DailyGreetings) },
                             onNavigateBack = { navigateBack() }
                         )
                     }
