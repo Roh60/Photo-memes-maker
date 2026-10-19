@@ -106,9 +106,12 @@ import com.example.data.model.LayerUtils
 import com.example.ui.components.DraggableMemeEditor
 import com.example.ui.components.DraggableScalableRotatableStickerOverlay
 import com.example.ui.components.LayerManagementSidebar
+import com.example.ui.components.ImageFilterBottomSheet
 import com.example.ui.components.MemeFilterControls
 import com.example.ui.components.PaletteColorPicker
 import com.example.ui.components.StudioTopBar
+import com.example.ui.components.TextOverlayEditorSheet
+import com.example.ui.components.TextOverlayUtils
 import com.example.ui.components.ValueSliderRow
 import com.example.util.BitmapUtils
 import com.example.util.SampleImages
@@ -174,6 +177,9 @@ fun MemeStudioScreen(
     var activeImagePanel by remember { mutableIntStateOf(1) }
     var isProcessing by remember { mutableStateOf(false) }
 
+    // Filter Bottom Sheet State
+    var showFilterBottomSheet by remember { mutableStateOf(false) }
+
     // Extra Floating Text Boxes & Placed Stickers
     val extraTextBoxes = remember { mutableStateListOf<MemeTextBox>() }
     val placedStickers = remember { mutableStateListOf<PlacedSticker>() }
@@ -194,39 +200,58 @@ fun MemeStudioScreen(
         if (!layerOrder.contains("bottom_text")) layerOrder.add("bottom_text")
     }
 
+    var topTextBoxCustom by remember { mutableStateOf<MemeTextBox?>(null) }
+    var bottomTextBoxCustom by remember { mutableStateOf<MemeTextBox?>(null) }
+    var showTextOverlaySheet by remember { mutableStateOf(false) }
+    var editingTextBox by remember { mutableStateOf<MemeTextBox?>(null) }
+
     val allMemeTextBoxes = remember(
-        topText, topTextX, topTextY, topTextSize, topTextVisible, topTextLocked,
-        bottomText, bottomTextX, bottomTextY, bottomTextSize, bottomTextVisible, bottomTextLocked,
+        topText, topTextX, topTextY, topTextSize, topTextVisible, topTextLocked, topTextBoxCustom,
+        bottomText, bottomTextX, bottomTextY, bottomTextSize, bottomTextVisible, bottomTextLocked, bottomTextBoxCustom,
         textColor, strokeColor, isAllCaps, extraTextBoxes.toList()
     ) {
         val list = mutableListOf<MemeTextBox>()
         if (topText.isNotEmpty()) {
+            val base = topTextBoxCustom ?: MemeTextBox(
+                id = "top_text",
+                text = topText,
+                xPercent = topTextX,
+                yPercent = topTextY,
+                fontSizeSp = topTextSize,
+                textColor = textColor,
+                strokeColor = strokeColor,
+                isAllCaps = isAllCaps
+            )
             list.add(
-                MemeTextBox(
+                base.copy(
                     id = "top_text",
                     text = topText,
                     xPercent = topTextX,
                     yPercent = topTextY,
                     fontSizeSp = topTextSize,
-                    textColor = textColor,
-                    strokeColor = strokeColor,
-                    isAllCaps = isAllCaps,
                     isVisible = topTextVisible,
                     isLocked = topTextLocked
                 )
             )
         }
         if (bottomText.isNotEmpty()) {
+            val base = bottomTextBoxCustom ?: MemeTextBox(
+                id = "bottom_text",
+                text = bottomText,
+                xPercent = bottomTextX,
+                yPercent = bottomTextY,
+                fontSizeSp = bottomTextSize,
+                textColor = textColor,
+                strokeColor = strokeColor,
+                isAllCaps = isAllCaps
+            )
             list.add(
-                MemeTextBox(
+                base.copy(
                     id = "bottom_text",
                     text = bottomText,
                     xPercent = bottomTextX,
                     yPercent = bottomTextY,
                     fontSizeSp = bottomTextSize,
-                    textColor = textColor,
-                    strokeColor = strokeColor,
-                    isAllCaps = isAllCaps,
                     isVisible = bottomTextVisible,
                     isLocked = bottomTextLocked
                 )
@@ -285,25 +310,83 @@ fun MemeStudioScreen(
         val p1 = filteredPanel1Bitmap ?: panel1Bitmap ?: SampleImages.createMemeGraphic(width, height, "smirk")
         val p2 = panel2Bitmap ?: SampleImages.createMemeGraphic(width, height, "shock")
 
-        // Helper to draw impact text at exact coordinates
-        fun drawImpactText(txt: String, xPercent: Float, yPercent: Float, sizeSp: Float) {
-            if (txt.isEmpty()) return
-            val textToDraw = if (isAllCaps) txt.uppercase() else txt
+        // Helper to draw styled text overlay with custom fonts, colors, and shadows
+        fun drawStyledMemeText(tb: MemeTextBox) {
+            if (tb.text.isEmpty() || !tb.isVisible) return
+            val textToDraw = if (tb.isAllCaps) tb.text.uppercase() else tb.text
+            val x = width * tb.xPercent
+            val y = height * tb.yPercent
+
+            canvas.save()
+            if (tb.rotation != 0f) {
+                canvas.rotate(tb.rotation, x, y)
+            }
+
             val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                color = textColor.toInt()
-                textSize = width * (sizeSp / 350f)
-                textAlign = android.graphics.Paint.Align.CENTER
-                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                color = tb.textColor.toInt()
+                textSize = width * (tb.fontSizeSp / 350f)
+                textAlign = when (tb.textAlign) {
+                    "left" -> android.graphics.Paint.Align.LEFT
+                    "right" -> android.graphics.Paint.Align.RIGHT
+                    else -> android.graphics.Paint.Align.CENTER
+                }
+                typeface = TextOverlayUtils.resolveTypeface(context, tb.fontId, tb.isBold, tb.isItalic)
+                if (tb.hasShadow) {
+                    setShadowLayer(tb.shadowRadius, tb.shadowDx, tb.shadowDy, tb.shadowColor.toInt())
+                }
             }
-            val stroke = android.graphics.Paint(paint).apply {
-                style = android.graphics.Paint.Style.STROKE
-                strokeWidth = paint.textSize * 0.16f
-                color = strokeColor.toInt()
+
+            // Draw background banner/highlight if enabled
+            if (tb.hasBackground) {
+                val bounds = android.graphics.Rect()
+                paint.getTextBounds(textToDraw, 0, textToDraw.length, bounds)
+                val pad = paint.textSize * 0.22f
+                val bgRect = android.graphics.RectF(
+                    when (tb.textAlign) {
+                        "left" -> x - pad
+                        "right" -> x - bounds.width() - pad
+                        else -> x - (bounds.width() / 2f) - pad
+                    },
+                    y - bounds.height() - pad,
+                    when (tb.textAlign) {
+                        "left" -> x + bounds.width() + pad
+                        "right" -> x + pad
+                        else -> x + (bounds.width() / 2f) + pad
+                    },
+                    y + pad
+                )
+                val bgPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                    color = tb.backgroundColor.toInt()
+                }
+                canvas.drawRoundRect(bgRect, 8f, 8f, bgPaint)
             }
-            val x = width * xPercent
-            val y = height * yPercent
-            canvas.drawText(textToDraw, x, y, stroke)
+
+            // Draw outline stroke pass if enabled
+            if (tb.hasStroke) {
+                val strokePaint = android.graphics.Paint(paint).apply {
+                    style = android.graphics.Paint.Style.STROKE
+                    strokeWidth = paint.textSize * (tb.strokeWidth / 30f)
+                    color = tb.strokeColor.toInt()
+                    clearShadowLayer()
+                }
+                canvas.drawText(textToDraw, x, y, strokePaint)
+            }
+
             canvas.drawText(textToDraw, x, y, paint)
+            canvas.restore()
+        }
+
+        fun drawImpactText(txt: String, xPercent: Float, yPercent: Float, sizeSp: Float) {
+            val fallbackBox = MemeTextBox(
+                text = txt,
+                xPercent = xPercent,
+                yPercent = yPercent,
+                fontSizeSp = sizeSp,
+                textColor = textColor,
+                strokeColor = strokeColor,
+                isAllCaps = isAllCaps
+            )
+            drawStyledMemeText(fallbackBox)
         }
 
         // Helper to draw sticker overlay
@@ -489,6 +572,18 @@ fun MemeStudioScreen(
                         }
                     }
 
+                    // Gallery image upload button
+                    IconButton(
+                        onClick = {
+                            galleryLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        modifier = Modifier.testTag("meme_top_gallery_btn")
+                    ) {
+                        Icon(imageVector = Icons.Default.PhotoLibrary, contentDescription = "Upload Gallery Photo")
+                    }
+
                     // Quick Stickers button in top bar
                     IconButton(
                         onClick = { showStickerPickerSheet = true },
@@ -535,20 +630,11 @@ fun MemeStudioScreen(
                         onClick = {
                             scope.launch {
                                 isProcessing = true
-                                try {
-                                    val bmp = generateMemeExport()
-                                    val uri = BitmapUtils.saveBitmapToGallery(context, bmp, "Meme")
-                                    repository.saveCreation(bmp, topText.take(20).ifBlank { "My Meme" }, "meme")
-                                    Toast.makeText(
-                                        context,
-                                        if (uri != null) "Meme saved to Gallery and Creations" else "Meme saved to My Creations; Gallery save failed",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                } catch (_: Exception) {
-                                    Toast.makeText(context, "Couldn't save meme. Please try again.", Toast.LENGTH_LONG).show()
-                                } finally {
-                                    isProcessing = false
-                                }
+                                val bmp = generateMemeExport()
+                                val uri = BitmapUtils.saveBitmapToGallery(context, bmp, "Meme")
+                                repository.saveCreation(bmp, topText.take(20), "meme")
+                                isProcessing = false
+                                Toast.makeText(context, "Meme Saved to Gallery!", Toast.LENGTH_LONG).show()
                             }
                         },
                         modifier = Modifier.testTag("meme_save_btn")
@@ -977,8 +1063,10 @@ fun MemeStudioScreen(
                                 onContrastChange = { filterViewModel.setContrast(it) },
                                 onSaturationChange = { filterViewModel.setSaturation(it) },
                                 onSepiaChange = { filterViewModel.setSepia(it) },
+                                onFilterIntensityChange = { filterViewModel.setFilterIntensity(it) },
                                 onApplyPreset = { filterViewModel.applyPreset(it) },
-                                onReset = { filterViewModel.resetFilters() }
+                                onReset = { filterViewModel.resetFilters() },
+                                onOpenFilterSheet = { showFilterBottomSheet = true }
                             )
                         }
 
@@ -1345,6 +1433,25 @@ fun MemeStudioScreen(
                 }
             }
         }
+    }
+
+    // Filter Modal Bottom Sheet (ColorMatrix)
+    if (showFilterBottomSheet) {
+        ImageFilterBottomSheet(
+            onDismissRequest = { showFilterBottomSheet = false },
+            activePreset = filterUiState.activePreset,
+            onPresetChange = { filterViewModel.applyPreset(it) },
+            filterIntensity = filterUiState.filterIntensity,
+            onFilterIntensityChange = { filterViewModel.setFilterIntensity(it) },
+            previewBitmap = panel1Bitmap,
+            brightness = filterUiState.brightness,
+            onBrightnessChange = { filterViewModel.setBrightness(it) },
+            contrast = filterUiState.contrast,
+            onContrastChange = { filterViewModel.setContrast(it) },
+            saturation = filterUiState.saturation,
+            onSaturationChange = { filterViewModel.setSaturation(it) },
+            onResetAll = { filterViewModel.resetFilters() }
+        )
     }
 
     // Sticker Picker Modal Bottom Sheet

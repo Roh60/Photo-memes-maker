@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Neon Pixel Deal-With-It Sunglasses -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M14,38 h68 v4 h-68 z" />
+    <path
+        android:fillColor="#111111"
+        android:pathData="M16,42 h28 v20 h-8 v-4 h-12 v-8 h-8 z M52,42 h28 v20 h-8 v-4 h-12 v-8 h-8 z" />
+    <!-- White Pixel Lens Glare -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,44 h4 v4 h-4 z M24,48 h4 v4 h-4 z M56,44 h4 v4 h-4 z M60,48 h4 v4 h-4 z" />
+</vector>

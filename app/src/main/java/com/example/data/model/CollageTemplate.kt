@@ -123,6 +123,72 @@ object CollageTemplateRepository {
             ),
             description = "Full background with floating inset"
         ),
+        CollageTemplate(
+            id = "2_magazine_split",
+            name = "Editorial 65/35 Split",
+            category = "2 Photos",
+            photoCount = 2,
+            slots = listOf(
+                CollageSlot(1, 0.0f, 0.0f, 0.65f, 1.0f, "Hero Focus"),
+                CollageSlot(2, 0.65f, 0.0f, 1.0f, 1.0f, "Side Column")
+            ),
+            description = "Magazine editorial asymmetric duo"
+        ),
+        CollageTemplate(
+            id = "2_polaroid_duo",
+            name = "Dual Retro Polaroids",
+            category = "2 Photos",
+            photoCount = 2,
+            slots = listOf(
+                CollageSlot(1, 0.04f, 0.06f, 0.48f, 0.90f, "Left Card"),
+                CollageSlot(2, 0.52f, 0.10f, 0.96f, 0.94f, "Right Card")
+            ),
+            description = "Vintage side-by-side snapshot card duo"
+        ),
+        CollageTemplate(
+            id = "2_staggered_cards",
+            name = "Staggered Modern Cards",
+            category = "2 Photos",
+            photoCount = 2,
+            slots = listOf(
+                CollageSlot(1, 0.04f, 0.04f, 0.68f, 0.68f, "Primary Card"),
+                CollageSlot(2, 0.32f, 0.32f, 0.96f, 0.96f, "Accent Card")
+            ),
+            description = "Overlapping contemporary gallery cards"
+        ),
+        CollageTemplate(
+            id = "2_portrait_duo",
+            name = "Twin Portrait Pillars",
+            category = "2 Photos",
+            photoCount = 2,
+            slots = listOf(
+                CollageSlot(1, 0.06f, 0.04f, 0.47f, 0.96f, "Left Pillar"),
+                CollageSlot(2, 0.53f, 0.04f, 0.94f, 0.96f, "Right Pillar")
+            ),
+            description = "Vertical twin gallery portrait pillars"
+        ),
+        CollageTemplate(
+            id = "2_cinema_letterbox",
+            name = "Cinema Letterbox Duo",
+            category = "2 Photos",
+            photoCount = 2,
+            slots = listOf(
+                CollageSlot(1, 0.0f, 0.08f, 1.0f, 0.48f, "Top Scene"),
+                CollageSlot(2, 0.0f, 0.52f, 1.0f, 0.92f, "Bottom Scene")
+            ),
+            description = "Widescreen cinematic dual movie stills"
+        ),
+        CollageTemplate(
+            id = "2_diagonal_split",
+            name = "Dynamic Diagonal Split",
+            category = "2 Photos",
+            photoCount = 2,
+            slots = listOf(
+                CollageSlot(1, 0.0f, 0.0f, 0.70f, 0.75f, "North-West"),
+                CollageSlot(2, 0.30f, 0.25f, 1.0f, 1.0f, "South-East")
+            ),
+            description = "Dynamic diagonal staggered layout"
+        ),
 
         // === 3 PHOTOS ===
         CollageTemplate(
@@ -336,6 +402,9 @@ object CollageTemplateRepository {
 
     fun getTemplatesByPhotoCount(count: Int): List<CollageTemplate> =
         TEMPLATES.filter { it.photoCount == count }
+
+    fun getDualPhotoTemplates(): List<CollageTemplate> =
+        TEMPLATES.filter { it.photoCount == 2 }
 
     fun getTemplateById(id: String): CollageTemplate =
         TEMPLATES.firstOrNull { it.id == id } ?: TEMPLATES.first()

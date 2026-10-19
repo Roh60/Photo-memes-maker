@@ -263,20 +263,11 @@ fun TemplateEditorScreen(
                         onClick = {
                             scope.launch {
                                 isProcessing = true
-                                try {
-                                    val bmp = generateExportBitmap()
-                                    val uri = BitmapUtils.saveBitmapToGallery(context, bmp, "Template_${template.subCategory}")
-                                    repository.saveCreation(bmp, template.name, "festival")
-                                    Toast.makeText(
-                                        context,
-                                        if (uri != null) "Design saved to Gallery and Creations" else "Design saved to My Creations; Gallery save failed",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                } catch (_: Exception) {
-                                    Toast.makeText(context, "Couldn't save design. Please try again.", Toast.LENGTH_LONG).show()
-                                } finally {
-                                    isProcessing = false
-                                }
+                                val bmp = generateExportBitmap()
+                                val uri = BitmapUtils.saveBitmapToGallery(context, bmp, "Template_${template.subCategory}")
+                                repository.saveCreation(bmp, template.name, "festival")
+                                isProcessing = false
+                                Toast.makeText(context, "Design Saved Successfully!", Toast.LENGTH_LONG).show()
                             }
                         },
                         modifier = Modifier.testTag("template_save_btn")

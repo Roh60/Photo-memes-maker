@@ -16,11 +16,23 @@ data class MemeTextBox(
     var xPercent: Float = 0.5f,
     var yPercent: Float = 0.5f,
     var fontSizeSp: Float = 24f,
+    var fontId: String = "Anton", // "Anton", "Pacifico", "Poppins", "Kalam", "Rozha", "Impact", "Sans-Serif", "Serif", "Monospace", "Cursive"
     var textColor: Long = 0xFFFFFFFF,
+    var hasStroke: Boolean = true,
     var strokeColor: Long = 0xFF000000,
+    var strokeWidth: Float = 3.5f,
+    var hasShadow: Boolean = true,
+    var shadowColor: Long = 0xAA000000,
+    var shadowRadius: Float = 6f,
+    var shadowDx: Float = 3f,
+    var shadowDy: Float = 3f,
+    var hasBackground: Boolean = false,
+    var backgroundColor: Long = 0x88000000,
     var isBold: Boolean = true,
+    var isItalic: Boolean = false,
     var isAllCaps: Boolean = true,
     var textAlign: String = "center", // "left", "center", "right"
+    var rotation: Float = 0f,
     var isVisible: Boolean = true,
     var isLocked: Boolean = false
 )
@@ -50,13 +62,7 @@ object MemeTemplateRepository {
         "Desi & Cricket",
         "Expectation vs Reality",
         "Sarcastic & Witty",
-        "Gaming & Tech",
-        "Couple & Breakup",
-        "Family & Festivals",
-        "POV & Daily Life",
-        "Before & After",
-        "Pets & Animals",
-        "Motivation & Sarcasm"
+        "Gaming & Tech"
     )
 
     val TEMPLATES = listOf(
@@ -157,106 +163,6 @@ object MemeTemplateRepository {
             defaultBottomText = "SUNLIGHT COMING THROUGH THE WINDOW",
             sampleGraphicType = "shock"
         )
-        ,
-        MemeTemplate(
-            id = "couple_chat_misunderstanding",
-            title = "Couple Chat Confusion",
-            category = "Couple & Breakup",
-            layoutType = MemeLayoutType.CHAT_STYLE,
-            defaultTopText = "ME: I'M FINE",
-            defaultBottomText = "ALSO ME: REPLAYS THE CONVERSATION 47 TIMES",
-            sampleGraphicType = "crying"
-        ),
-        MemeTemplate(
-            id = "family_function_food",
-            title = "Family Function Food Mission",
-            category = "Family & Festivals",
-            layoutType = MemeLayoutType.CLASSIC_TOP_BOTTOM,
-            defaultTopText = "GOING TO THE FAMILY FUNCTION",
-            defaultBottomText = "RETURNING WITH 4 FOOD PACKETS",
-            sampleGraphicType = "smirk"
-        ),
-        MemeTemplate(
-            id = "pov_five_more_minutes",
-            title = "POV: Five More Minutes",
-            category = "POV & Daily Life",
-            layoutType = MemeLayoutType.HEADER_CAPTION,
-            defaultTopText = "POV: YOU SET 5 ALARMS AND SNOOZE ALL OF THEM",
-            sampleGraphicType = "shock"
-        ),
-        MemeTemplate(
-            id = "before_after_salary",
-            title = "Before and After Salary",
-            category = "Before & After",
-            layoutType = MemeLayoutType.TWO_PANEL_VERTICAL,
-            panel1Header = "SALARY DAY",
-            panel2Header = "END OF THE MONTH",
-            defaultTopText = "I CAN FINALLY SAVE MONEY",
-            defaultBottomText = "WHO SPENT EVERYTHING?",
-            sampleGraphicType = "crying",
-            panels = 2
-        ),
-        MemeTemplate(
-            id = "pet_owner_logic",
-            title = "Pet Owner Logic",
-            category = "Pets & Animals",
-            layoutType = MemeLayoutType.CLASSIC_TOP_BOTTOM,
-            defaultTopText = "I DON'T NEED ANY MORE PET TOYS",
-            defaultBottomText = "BUYS ANOTHER ONE THE SAME DAY",
-            sampleGraphicType = "smirk"
-        ),
-        MemeTemplate(
-            id = "motivation_monday",
-            title = "Monday Motivation Reality",
-            category = "Motivation & Sarcasm",
-            layoutType = MemeLayoutType.DRAKE_COMPARISON,
-            panel1Header = "❌ MONDAY 6 AM",
-            panel2Header = "✅ MONDAY 10 AM",
-            defaultTopText = "BECOMING A NEW PERSON TODAY",
-            defaultBottomText = "JUST ONE MORE COFFEE FIRST",
-            sampleGraphicType = "smart",
-            panels = 2
-        ),
-        MemeTemplate(
-            id = "desi_guest_arrival",
-            title = "Desi Guests Are Coming",
-            category = "Family & Festivals",
-            layoutType = MemeLayoutType.CLASSIC_TOP_BOTTOM,
-            defaultTopText = "GUESTS: WE'RE 5 MINUTES AWAY",
-            defaultBottomText = "FAMILY: STARTS A 2-HOUR CLEANING MISSION",
-            sampleGraphicType = "shock"
-        ),
-        MemeTemplate(
-            id = "exam_result_refresh",
-            title = "Refreshing Exam Results",
-            category = "Student & Exams",
-            layoutType = MemeLayoutType.CLASSIC_TOP_BOTTOM,
-            defaultTopText = "RESULTS WEBSITE FINALLY OPENS",
-            defaultBottomText = "SERVER ERROR: TRY AGAIN LATER",
-            sampleGraphicType = "crying"
-        ),
-        MemeTemplate(
-            id = "gaming_one_last_round",
-            title = "One Last Round",
-            category = "Gaming & Tech",
-            layoutType = MemeLayoutType.HEADER_CAPTION,
-            defaultTopText = "FRIEND SAYS THIS IS THE LAST ROUND",
-            defaultBottomText = "THREE HOURS LATER...",
-            sampleGraphicType = "smirk"
-        ),
-        MemeTemplate(
-            id = "friend_group_plans",
-            title = "Friend Group Planning",
-            category = "Friendship & Dating",
-            layoutType = MemeLayoutType.TWO_PANEL_SIDE,
-            panel1Header = "IN THE GROUP CHAT",
-            panel2Header = "ON THE ACTUAL DAY",
-            defaultTopText = "EVERYONE IS COMING",
-            defaultBottomText = "ONLY TWO PEOPLE SHOW UP",
-            sampleGraphicType = "shock",
-            panels = 2
-        )
-
     )
 
     fun getTemplatesByCategory(cat: String): List<MemeTemplate> {

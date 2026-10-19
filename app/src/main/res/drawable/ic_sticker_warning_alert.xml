@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Hazard Warning Sarcasm Alert Triangle -->
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M48,12 L88,80 L8,80 Z" />
+    <path
+        android:fillColor="#212121"
+        android:pathData="M48,22 L80,74 L16,74 Z" />
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M45,36 h6 v22 h-6 z M45,62 h6 v6 h-6 z" />
+</vector>

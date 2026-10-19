@@ -31,7 +31,7 @@ fun PrivacyPolicyDialog(onDismiss: () -> Unit) {
             )
         },
         title = {
-            Text("Privacy & Local Storage Policy", style = MaterialTheme.typography.titleLarge)
+            Text("Privacy & Local Storage", style = MaterialTheme.typography.titleLarge)
         },
         text = {
             Column(
@@ -46,11 +46,11 @@ fun PrivacyPolicyDialog(onDismiss: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "• On-Device Editing: Photo editing and meme creation workflows are designed to process images on your device.\n" +
-                            "• Photo Sharing: Images shared through Android system sharing may be handled by the app or service you select under its own privacy policy.\n" +
-                            "• Saved Creations: Creations saved by the app are stored in its designated device storage. You can delete saved items using the available app controls.\n" +
-                            "• Permissions: Camera access is requested when you choose to take a photo. Image selection uses Android photo picker where supported.\n" +
-                            "• Network and Third-Party Services: Included libraries or future features may have different data practices. Network-connected behavior must be reviewed before making privacy guarantees.",
+                    text = "• Local Storage: Your photos, drafts and saved creations are stored only on your phone. The app has no internet permission and does not upload anything to any server.\n" +
+                            "• On-Device Editing: Photo editing and meme creation are done on your device.\n" +
+                            "• Saved Creations: Saved items stay in the app's storage and exports go to Pictures/PhotoMemesMaker. You can delete them anytime from My Creations or your gallery.\n" +
+                            "• Permissions: Camera access is requested only when you choose to take a photo. Image selection uses the Android photo picker.\n" +
+                            "• Sharing: When you share an image, it goes through Android's share sheet to the app you choose, which has its own privacy policy.",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }

@@ -1,0 +1,100 @@
+name: Build Photo and Memes Maker AAB
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Prepare Android SDK path
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          if [ -f gradle.properties ]; then
+            sed -i '/^android\.aapt2FromMavenOverride=/d' gradle.properties
+          fi
+
+      - name: Generate debug keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore debug.keystore \
+            -storepass android \
+            -keypass android \
+            -alias androiddebugkey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Block removed promotional claims
+        shell: bash
+        run: |
+          set +e
+          git grep -n -I -E 'Pro Studio feature enabled|Pro Studio|Unlimited 100% HD export|Unlimited HD exports|100% offline|offline & private' -- app/src
+          result=$?
+          set -e
+          if [ "$result" -eq 0 ]; then
+            echo "ERROR: Removed promotional claims found in app source."
+            exit 1
+          elif [ "$result" -ne 1 ]; then
+            echo "ERROR: Source scan failed with exit code $result."
+            exit "$result"
+          fi
+          echo "PASS: No removed promotional claims in tracked app source."
+
+      - name: Prepare release signing
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD_SECRET: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD_SECRET: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$STORE_PASSWORD_SECRET" ] && [ -n "$KEY_PASSWORD_SECRET" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload-key.jks"
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/upload-key.jks" >> "$GITHUB_ENV"
+            echo "STORE_PASSWORD=$STORE_PASSWORD_SECRET" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=$KEY_PASSWORD_SECRET" >> "$GITHUB_ENV"
+            echo "Signing AAB with your upload key (secrets found)."
+          else
+            echo "::warning::Signing secrets not found. Using a TEMPORARY key. This AAB can NOT be uploaded to Play Console."
+            keytool -genkeypair -v \
+              -keystore "$RUNNER_TEMP/temp-upload-key.jks" \
+              -storepass temp-pass-123 \
+              -keypass temp-pass-123 \
+              -alias upload \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Temp Upload,O=Temp,C=US"
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/temp-upload-key.jks" >> "$GITHUB_ENV"
+            echo "STORE_PASSWORD=temp-pass-123" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=temp-pass-123" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build release AAB
+        run: gradle :app:bundleRelease
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: photo-memes-maker-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error

@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Heart Eyes Love Face Badge -->
+    <path
+        android:fillColor="#FFCA28"
+        android:pathData="M48,48 m-40,0 a40,40 0 1,0 80,0 a40,40 0 1,0 -80,0" />
+    <!-- Heart Left Eye -->
+    <path
+        android:fillColor="#E91E63"
+        android:pathData="M34,36 C34,32 30,28 26,30 C22,32 20,38 28,48 L34,54 L40,48 C48,38 46,32 42,30 C38,28 34,32 34,36 Z" />
+    <!-- Heart Right Eye -->
+    <path
+        android:fillColor="#E91E63"
+        android:pathData="M62,36 C62,32 58,28 54,30 C50,32 48,38 56,48 L62,54 L68,48 C76,38 74,32 70,30 C66,28 62,32 62,36 Z" />
+    <!-- Happy Smile -->
+    <path
+        android:fillColor="#5D4037"
+        android:pathData="M32,60 C32,74 64,74 64,60 Z" />
+</vector>

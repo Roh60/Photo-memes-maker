@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -57,9 +58,11 @@ fun MemeFilterControls(
     onContrastChange: (Float) -> Unit,
     onSaturationChange: (Float) -> Unit,
     onSepiaChange: (Float) -> Unit,
+    onFilterIntensityChange: (Float) -> Unit = {},
     onApplyPreset: (String) -> Unit,
     onReset: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenFilterSheet: (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -91,13 +94,28 @@ fun MemeFilterControls(
                 )
             }
 
-            OutlinedButton(
-                onClick = onReset,
-                modifier = Modifier.testTag("reset_meme_filters_btn")
-            ) {
-                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Reset", fontSize = 12.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (onOpenFilterSheet != null) {
+                    OutlinedButton(
+                        onClick = onOpenFilterSheet,
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .testTag("open_meme_filter_sheet_btn")
+                    ) {
+                        Icon(Icons.Default.OpenInFull, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Sheet", fontSize = 12.sp)
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = onReset,
+                    modifier = Modifier.testTag("reset_meme_filters_btn")
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Reset", fontSize = 12.sp)
+                }
             }
         }
 
@@ -154,6 +172,16 @@ fun MemeFilterControls(
         }
 
         Spacer(modifier = Modifier.height(6.dp))
+
+        if (uiState.activePreset != "none") {
+            ValueSliderRow(
+                label = "Filter Intensity (${(uiState.filterIntensity * 100).toInt()}%)",
+                value = uiState.filterIntensity,
+                range = 0.0f..1.0f,
+                onValueChange = onFilterIntensityChange,
+                testTag = "slider_filter_intensity"
+            )
+        }
 
         // Sliders for Brightness, Contrast, Saturation, Sepia
         ValueSliderRow(

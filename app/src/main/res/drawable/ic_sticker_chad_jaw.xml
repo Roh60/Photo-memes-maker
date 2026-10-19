@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Sigma Gigachad Silhouette Gold Badge -->
+    <path
+        android:fillColor="#FFB300"
+        android:pathData="M48,8 L84,24 L76,64 L48,88 L20,64 L12,24 Z" />
+    <path
+        android:fillColor="#212121"
+        android:pathData="M48,14 L78,27 L71,61 L48,82 L25,61 L18,27 Z" />
+    <!-- Chiseled Jawline Profile -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M38,28 L58,28 L62,42 L52,52 L48,68 L44,68 L40,56 L34,42 Z" />
+    <!-- Sigma Sunglasses -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M32,36 L64,36 L60,46 L49,46 L47,42 L45,46 L36,46 Z" />
+</vector>

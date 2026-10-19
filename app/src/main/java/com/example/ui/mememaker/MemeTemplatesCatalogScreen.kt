@@ -23,7 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -32,7 +31,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -64,15 +62,8 @@ fun MemeTemplatesCatalogScreen(
     BackHandler { onNavigateBack() }
 
     var selectedCategory by remember { mutableStateOf("All") }
-    var searchQuery by remember { mutableStateOf("") }
-    val templates = remember(selectedCategory, searchQuery) {
-        MemeTemplateRepository.getTemplatesByCategory(selectedCategory).filter { template ->
-            searchQuery.isBlank() ||
-                template.title.contains(searchQuery, ignoreCase = true) ||
-                template.category.contains(searchQuery, ignoreCase = true) ||
-                template.defaultTopText.contains(searchQuery, ignoreCase = true) ||
-                template.defaultBottomText.contains(searchQuery, ignoreCase = true)
-        }
+    val templates = remember(selectedCategory) {
+        MemeTemplateRepository.getTemplatesByCategory(selectedCategory)
     }
 
     Scaffold(
@@ -106,19 +97,6 @@ fun MemeTemplatesCatalogScreen(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Search funny, cricket, study, relationship...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search memes") },
-                singleLine = true,
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .testTag("meme_search_input")
-            )
-
             // Category Chips Row
             Row(
                 modifier = Modifier
@@ -136,37 +114,19 @@ fun MemeTemplatesCatalogScreen(
                 }
             }
 
-            // Grid of Meme Templates, with a helpful state when search has no matches.
-            if (templates.isEmpty()) {
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text("🔎", fontSize = 38.sp)
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text("No memes found", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(
-                        "Try another keyword or choose All categories.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+            // Grid of Meme Templates
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(templates, key = { it.id }) { tpl ->
+                    MemeCatalogCard(
+                        template = tpl,
+                        onClick = { onSelectTemplate(tpl.id) }
                     )
-                }
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(templates, key = { it.id }) { tpl ->
-                        MemeCatalogCard(
-                            template = tpl,
-                            onClick = { onSelectTemplate(tpl.id) }
-                        )
-                    }
                 }
             }
         }

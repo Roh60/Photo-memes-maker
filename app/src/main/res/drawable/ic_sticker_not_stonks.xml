@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Red Not Stonks Downward Crash Arrow -->
+    <path
+        android:fillColor="#263238"
+        android:pathData="M48,48 m-44,0 a44,44 0 1,0 88,0 a44,44 0 1,0 -88,0" />
+    <!-- Falling Crash Chart Line -->
+    <path
+        android:fillColor="#FF1744"
+        android:pathData="M16,26 L34,42 L50,34 L74,68 L84,62 L82,78 L66,74 L74,68 L48,42 L34,50 L14,32 Z" />
+    <!-- Grid guidelines -->
+    <path
+        android:fillColor="#37474F"
+        android:pathData="M20,32 h56 v2 h-56 z M20,48 h56 v2 h-56 z M20,64 h56 v2 h-56 z" />
+</vector>

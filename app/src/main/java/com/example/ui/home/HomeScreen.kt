@@ -2,10 +2,11 @@ package com.example.ui.home
 
 import android.graphics.Bitmap
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -21,6 +22,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.annotation.DrawableRes
+import androidx.compose.ui.res.painterResource
+import com.example.data.model.StickerLibrary
+import com.example.ui.mememaker.StickerPickerModalBottomSheet
+import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +44,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SentimentSatisfiedAlt
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
@@ -75,7 +82,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.data.model.CollageTemplate
+import com.example.data.model.CollageTemplateRepository
 import com.example.data.model.MemeTemplateRepository
+import com.example.data.model.QuoteCategory
+import com.example.data.model.QuoteFrameStyle
+import com.example.data.model.QuoteItem
+import com.example.data.model.QuoteRepository
 import com.example.data.model.TemplateRepository
 import com.example.data.repository.CreationsRepository
 import com.example.ui.privacy.PrivacyPolicyDialog
@@ -89,18 +102,22 @@ fun HomeScreen(
     onOpenPhotoStudioWithBitmap: (Bitmap?) -> Unit,
     onLaunchCamera: () -> Unit,
     onOpenTwoPhotoFrame: () -> Unit,
+    onOpenCollageWithTemplate: (String) -> Unit = {},
+    onOpenCollageWithBitmaps: (List<Bitmap>, String?) -> Unit = { _, _ -> },
     onOpenTemplate: (String) -> Unit,
     onOpenTemplatesCatalog: () -> Unit,
     onOpenMemeStudio: (String?) -> Unit,
     onOpenMemesCatalog: () -> Unit,
     onOpenCreations: () -> Unit,
-    onOpenDailyGreetings: () -> Unit
+    onOpenQuotesMaker: (quoteId: String?, frameId: String?, templateId: String?) -> Unit = { _, _, _ -> },
+    onOpenDailyGreetings: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repository = remember { CreationsRepository(context) }
     val creations by repository.allCreations.collectAsState(initial = emptyList())
     var showPrivacyDialog by remember { mutableStateOf(false) }
+    var showStickerSheet by remember { mutableStateOf(false) }
 
     // Direct Camera and Gallery launchers from Home Screen
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -109,15 +126,7 @@ fun HomeScreen(
         if (uri != null) {
             scope.launch {
                 val bmp = BitmapUtils.decodeUriToBitmap(context, uri)
-                if (bmp != null) {
-                    onOpenPhotoStudioWithBitmap(bmp)
-                } else {
-                    Toast.makeText(
-                        context,
-                        "Photo load nahi hui. Dusri image try karein.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                onOpenPhotoStudioWithBitmap(bmp)
             }
         }
     }
@@ -127,6 +136,22 @@ fun HomeScreen(
     ) { bmp: Bitmap? ->
         if (bmp != null) {
             onOpenPhotoStudioWithBitmap(bmp)
+        }
+    }
+
+    // Direct Dual-Photo Gallery Launcher to pick 2 photos and combine them
+    val dualGalleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 2)
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            scope.launch {
+                val bitmaps = uris.mapNotNull { BitmapUtils.decodeUriToBitmap(context, it) }
+                if (bitmaps.isNotEmpty()) {
+                    onOpenCollageWithBitmaps(bitmaps, "2_side_by_side")
+                } else {
+                    onOpenTwoPhotoFrame()
+                }
+            }
         }
     }
 
@@ -264,60 +289,315 @@ fun HomeScreen(
         }
 
         // 4 Core Hub Action Tiles
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            HomeHubTile(
-                title = "Photo Studio",
-                subtitle = "Filters & Edits",
-                emoji = "🪄",
-                bgColor = 0xFF6366F1,
-                onClick = { onOpenPhotoStudioWithBitmap(null) },
-                modifier = Modifier.weight(1f).testTag("tile_photo_studio")
-            )
-            HomeHubTile(
-                title = "Collage Maker",
-                subtitle = "2-6 Photo Grids",
-                emoji = "🖼️",
-                bgColor = 0xFFEC4899,
-                onClick = onOpenTwoPhotoFrame,
-                modifier = Modifier.weight(1f).testTag("tile_two_frame")
-            )
-            HomeHubTile(
-                title = "Meme Creator",
-                subtitle = "Punchlines",
-                emoji = "😂",
-                bgColor = 0xFFF59E0B,
-                onClick = { onOpenMemeStudio(null) },
-                modifier = Modifier.weight(1f).testTag("tile_meme_studio")
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Added in the next feature step: personalized daily greeting maker.
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable { onOpenDailyGreetings() },
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(Brush.linearGradient(listOf(Color(0xFFFF8A65), Color(0xFFEC4899)))), contentAlignment = Alignment.Center) {
-                    Text("🎉", fontSize = 28.sp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                HomeHubTile(
+                    title = "Photo Studio",
+                    subtitle = "Filters & Edits",
+                    emoji = "🪄",
+                    bgColor = 0xFF6366F1,
+                    onClick = { onOpenPhotoStudioWithBitmap(null) },
+                    modifier = Modifier.weight(1f).testTag("tile_photo_studio")
+                )
+                HomeHubTile(
+                    title = "Collage Maker",
+                    subtitle = "2-6 Photo Grids",
+                    emoji = "🖼️",
+                    bgColor = 0xFFEC4899,
+                    onClick = onOpenTwoPhotoFrame,
+                    modifier = Modifier.weight(1f).testTag("tile_two_frame")
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                HomeHubTile(
+                    title = "Meme Creator",
+                    subtitle = "Punchlines & Humor",
+                    emoji = "😂",
+                    bgColor = 0xFFF59E0B,
+                    onClick = { onOpenMemeStudio(null) },
+                    modifier = Modifier.weight(1f).testTag("tile_meme_studio")
+                )
+                HomeHubTile(
+                    title = "Quotes Maker",
+                    subtitle = "Frames & Thoughts",
+                    emoji = "✍️",
+                    bgColor = 0xFF10B981,
+                    onClick = { onOpenQuotesMaker(null, null, null) },
+                    modifier = Modifier.weight(1f).testTag("tile_quotes_studio")
+                )
+            }
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable { onOpenDailyGreetings() }.testTag("tile_daily_greetings"),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(Brush.linearGradient(listOf(Color(0xFFFF8A65), Color(0xFFEC4899)))), contentAlignment = Alignment.Center) {
+                        Text("🎉", fontSize = 28.sp)
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Daily Greetings & Quotes", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        Text("Add your name/photo and share beautiful wishes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Open greetings")
                 }
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Daily Greetings & Quotes", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                    Text("Add your name/photo and share beautiful wishes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Open greetings")
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Dual-Photo Collage Frames Section
+        SectionHeader(
+            title = "🖼️ Dual-Photo Collage Frames",
+            actionText = "Open Studio",
+            onAction = onOpenTwoPhotoFrame
+        )
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .testTag("home_dual_collage_banner"),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .background(
+                            brush = Brush.linearGradient(listOf(Color(0xFFEC4899), Color(0xFF8B5CF6))),
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("🖼️", fontSize = 22.sp)
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Combine Two Photos",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Select 2 photos from gallery to combine into a stylish layout",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = {
+                        dualGalleryLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.testTag("home_pick_dual_photos_btn")
+                ) {
+                    Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Select 2", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // Horizontal Carousel of Dual-Photo Collage Frames
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            val dualTemplates = remember { CollageTemplateRepository.getDualPhotoTemplates() }
+            dualTemplates.forEach { tpl ->
+                HomeDualFrameCarouselCard(
+                    template = tpl,
+                    onClick = { onOpenCollageWithTemplate(tpl.id) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Text Quotes & Frame Styles Section
+        SectionHeader(
+            title = "✍️ Text Quotes & Frame Styles",
+            actionText = "Open Studio",
+            onAction = { onOpenQuotesMaker(null, null, null) }
+        )
+
+        // Spotlight Quotes Maker Banner Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .testTag("home_quotes_banner"),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .background(
+                                brush = Brush.linearGradient(listOf(Color(0xFF059669), Color(0xFF10B981))),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("✍️", fontSize = 22.sp)
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Motivational & Facts Quotes",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Design inspiring quotes with luxury, cyber, and vintage frames",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { onOpenQuotesMaker(null, null, null) },
+                        modifier = Modifier.weight(1.2f).testTag("home_create_quote_btn"),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Create Quote")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            val randomItem = QuoteRepository.getRandomQuote()
+                            onOpenQuotesMaker(randomItem.id, randomItem.suggestedFrame.name, null)
+                        },
+                        modifier = Modifier.weight(1f).testTag("home_random_quote_btn"),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Inspire Me")
+                    }
+                }
+            }
+        }
+
+        // Ready-to-Use Quote Templates
+        Text(
+            text = "🌟 Curated Quote Templates",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            QuoteRepository.getAllTemplates().forEach { tpl ->
+                HomeQuoteTemplateCard(
+                    template = tpl,
+                    onClick = { onOpenQuotesMaker(null, null, tpl.id) }
+                )
+            }
+        }
+
+        // Quote Frame Styles Carousel
+        Text(
+            text = "Designer Quote Frames",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            QuoteFrameStyle.values().forEach { style ->
+                HomeQuoteFrameCard(
+                    style = style,
+                    onClick = { onOpenQuotesMaker(null, style.name, null) }
+                )
+            }
+        }
+
+        // Curated Quotes Cards Carousel (Motivational & Facts)
+        Text(
+            text = "Curated Quotes & Facts",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, top = 10.dp, bottom = 4.dp)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            QuoteRepository.QUOTES.take(12).forEach { item ->
+                HomeQuoteItemCard(
+                    quoteItem = item,
+                    onClick = { onOpenQuotesMaker(item.id, item.suggestedFrame.name, null) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Featured Festival Templates Section
         SectionHeader(
@@ -371,6 +651,33 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // VIP & Premium Photo Templates Section
+        SectionHeader(
+            title = "👑 VIP & Premium Photo Templates",
+            actionText = "See All (${TemplateRepository.PREMIUM_TEMPLATES.size})",
+            onAction = onOpenTemplatesCatalog
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            TemplateRepository.PREMIUM_TEMPLATES.forEach { tpl ->
+                HomeTemplateCarouselCard(
+                    title = tpl.name,
+                    category = tpl.subCategory,
+                    emoji = tpl.decorativeEmoji,
+                    gradientColors = tpl.gradientColors,
+                    isPremium = true,
+                    onClick = { onOpenTemplate(tpl.id) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Popular Meme Formats Section
         SectionHeader(
             title = "🔥 Popular Meme Formats",
@@ -391,6 +698,33 @@ fun HomeScreen(
                     category = meme.category,
                     graphicType = meme.sampleGraphicType,
                     onClick = { onOpenMemeStudio(meme.id) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Meme Sticker Assets Library Section
+        SectionHeader(
+            title = "🎭 Meme Sticker Assets Library",
+            actionText = "Browse (${StickerLibrary.DRAWABLE_STICKERS.size})",
+            onAction = { showStickerSheet = true }
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            StickerLibrary.DRAWABLE_STICKERS.forEach { sticker ->
+                HomeStickerCarouselCard(
+                    name = sticker.name,
+                    category = sticker.category,
+                    resId = sticker.resId,
+                    onClick = {
+                        onOpenMemeStudio(null)
+                    }
                 )
             }
         }
@@ -440,13 +774,25 @@ fun HomeScreen(
             }
         }
 
-        // Monetization Banner (Creator Pro)
-
         Spacer(modifier = Modifier.height(24.dp))
     }
 
     if (showPrivacyDialog) {
         PrivacyPolicyDialog(onDismiss = { showPrivacyDialog = false })
+    }
+
+    if (showStickerSheet) {
+        StickerPickerModalBottomSheet(
+            onDismissRequest = { showStickerSheet = false },
+            onSelectDrawableSticker = {
+                showStickerSheet = false
+                onOpenMemeStudio(null)
+            },
+            onSelectEmojiSticker = {
+                showStickerSheet = false
+                onOpenMemeStudio(null)
+            }
+        )
     }
 }
 
@@ -529,6 +875,7 @@ fun HomeTemplateCarouselCard(
     category: String,
     emoji: String,
     gradientColors: List<Long>,
+    isPremium: Boolean = false,
     onClick: () -> Unit
 ) {
     ElevatedCard(
@@ -550,6 +897,21 @@ fun HomeTemplateCarouselCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
+                if (isPremium) {
+                    Surface(
+                        shape = RoundedCornerShape(bottomEnd = 8.dp),
+                        color = Color(0xFFD97706),
+                        modifier = Modifier.align(Alignment.TopStart)
+                    ) {
+                        Text(
+                            text = "👑 PRO",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
                 Surface(
                     shape = CircleShape,
                     color = Color.White.copy(alpha = 0.25f),
@@ -628,3 +990,300 @@ fun HomeMemeCarouselCard(
         }
     }
 }
+
+@Composable
+fun HomeStickerCarouselCard(
+    name: String,
+    category: String,
+    @DrawableRes resId: Int,
+    onClick: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .width(130.dp)
+            .clickable { onClick() }
+            .testTag("home_sticker_card_$name"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(60.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(id = resId),
+                        contentDescription = name,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(44.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = category,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeDualFrameCarouselCard(
+    template: CollageTemplate,
+    onClick: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .width(136.dp)
+            .clickable { onClick() }
+            .testTag("home_dual_tpl_${template.id}"),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(100.dp, 75.dp)
+                    .background(Color(0xFF1E293B), RoundedCornerShape(8.dp))
+                    .padding(5.dp)
+            ) {
+                // Miniature preview slots
+                template.slots.forEach { slot ->
+                    val slotColor = if (slot.id == 1) Color(0xFF6366F1).copy(alpha = 0.9f) else Color(0xFFEC4899).copy(alpha = 0.9f)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                start = (slot.left * 90).dp,
+                                top = (slot.top * 65).dp,
+                                end = ((1f - slot.right) * 90).dp,
+                                bottom = ((1f - slot.bottom) * 65).dp
+                            )
+                            .background(slotColor, RoundedCornerShape(3.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "${slot.id}",
+                            color = Color.White,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = template.name,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = template.description,
+                style = MaterialTheme.typography.bodySmall,
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeQuoteFrameCard(
+    style: QuoteFrameStyle,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(130.dp)
+            .clickable { onClick() }
+            .testTag("home_quote_frame_${style.name}"),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f))
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(90.dp, 65.dp)
+                    .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
+                    .padding(6.dp)
+                    .border(1.5.dp, Color(0xFFD4AF37), RoundedCornerShape(6.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("“ ”", fontSize = 18.sp, color = Color(0xFFD4AF37), fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = style.displayName,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "Frame Style",
+                style = MaterialTheme.typography.bodySmall,
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeQuoteItemCard(
+    quoteItem: QuoteItem,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(220.dp)
+            .height(115.dp)
+            .clickable { onClick() }
+            .testTag("home_quote_item_${quoteItem.id}"),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${quoteItem.badgeIcon} ${quoteItem.category.displayName}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text("“", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.Gray)
+            }
+            Text(
+                text = quoteItem.quote,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "— ${quoteItem.author}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeQuoteTemplateCard(
+    template: com.example.data.model.QuoteTemplate,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(200.dp)
+            .height(115.dp)
+            .clickable { onClick() }
+            .testTag("home_quote_template_${template.id}"),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${template.badgeIcon} ${template.name}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = template.frameStyle.displayName.take(12),
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                }
+            }
+            Text(
+                text = "“${template.quote}”",
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "— ${template.author}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Use ⚡",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+

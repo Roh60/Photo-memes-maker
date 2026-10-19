@@ -269,42 +269,60 @@ private fun DraggableResizableTextOverlay(
             contentAlignment = Alignment.Center
         ) {
             val textToRender = if (textBox.isAllCaps) textBox.text.uppercase() else textBox.text
+            val chosenFontFamily = TextOverlayUtils.resolveFontFamily(textBox.fontId)
+            val shadowSpec = if (textBox.hasShadow) {
+                androidx.compose.ui.graphics.Shadow(
+                    color = Color(textBox.shadowColor),
+                    offset = androidx.compose.ui.geometry.Offset(textBox.shadowDx, textBox.shadowDy),
+                    blurRadius = textBox.shadowRadius
+                )
+            } else null
 
-            Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .rotate(textBox.rotation)
+                    .then(
+                        if (textBox.hasBackground) {
+                            Modifier
+                                .background(
+                                    Color(textBox.backgroundColor),
+                                    RoundedCornerShape(6.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        } else Modifier
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (textBox.hasStroke) {
+                    Text(
+                        text = textToRender,
+                        fontSize = textBox.fontSizeSp.sp,
+                        fontFamily = chosenFontFamily,
+                        fontWeight = if (textBox.isBold) FontWeight.Black else FontWeight.Bold,
+                        fontStyle = if (textBox.isItalic) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal,
+                        textAlign = when (textBox.textAlign) {
+                            "left" -> TextAlign.Left
+                            "right" -> TextAlign.Right
+                            else -> TextAlign.Center
+                        },
+                        color = Color(textBox.strokeColor),
+                        modifier = Modifier.offset(1.5.dp, 1.5.dp)
+                    )
+                }
+
                 Text(
                     text = textToRender,
                     fontSize = textBox.fontSizeSp.sp,
-                    fontWeight = if (textBox.isBold) FontWeight.Black else FontWeight.Bold,
+                    fontFamily = chosenFontFamily,
+                    fontWeight = if (textBox.isBold) FontWeight.Bold else FontWeight.Normal,
+                    fontStyle = if (textBox.isItalic) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal,
                     textAlign = when (textBox.textAlign) {
                         "left" -> TextAlign.Left
                         "right" -> TextAlign.Right
                         else -> TextAlign.Center
                     },
-                    color = Color(textBox.strokeColor),
-                    modifier = Modifier.offset(2.dp, 2.dp)
-                )
-                Text(
-                    text = textToRender,
-                    fontSize = textBox.fontSizeSp.sp,
-                    fontWeight = if (textBox.isBold) FontWeight.Black else FontWeight.Bold,
-                    textAlign = when (textBox.textAlign) {
-                        "left" -> TextAlign.Left
-                        "right" -> TextAlign.Right
-                        else -> TextAlign.Center
-                    },
-                    color = Color(textBox.strokeColor),
-                    modifier = Modifier.offset((-2).dp, (-2).dp)
-                )
-                Text(
-                    text = textToRender,
-                    fontSize = textBox.fontSizeSp.sp,
-                    fontWeight = if (textBox.isBold) FontWeight.Black else FontWeight.Bold,
-                    textAlign = when (textBox.textAlign) {
-                        "left" -> TextAlign.Left
-                        "right" -> TextAlign.Right
-                        else -> TextAlign.Center
-                    },
-                    color = Color(textBox.textColor)
+                    color = Color(textBox.textColor),
+                    style = androidx.compose.ui.text.TextStyle(shadow = shadowSpec)
                 )
             }
 

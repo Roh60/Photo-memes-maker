@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Green Cash Sack -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M38,24 C38,18 42,14 48,14 C54,14 58,18 58,24 C56,26 54,28 58,30 C68,34 78,44 78,60 C78,76 66,86 48,86 C30,86 18,76 18,60 C18,44 28,34 38,30 C42,28 40,26 38,24 Z" />
+    <!-- Golden Rope Tie -->
+    <path
+        android:fillColor="#FDD835"
+        android:pathData="M34,28 C42,32 54,32 62,28 C64,32 60,34 54,34 C42,34 38,32 34,28 Z" />
+    <!-- Rupee / Dollar Currency Sign -->
+    <path
+        android:fillColor="#E8F5E9"
+        android:pathData="M44,44 h14 v6 h-14 z M44,54 h14 v6 h-14 z M44,40 h18 v4 h-18 z M48,40 v32 h-6 v-32 z M48,60 L60,76 h-8 L44,64 z" />
+</vector>

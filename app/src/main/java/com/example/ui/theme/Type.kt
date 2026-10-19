@@ -21,6 +21,14 @@ val RozhaOneFontFamily = FontFamily(
     Font(R.font.rozha_one, FontWeight.Normal)
 )
 
+val AntonFontFamily = FontFamily(
+    Font(R.font.anton, FontWeight.Normal)
+)
+
+val PacificoFontFamily = FontFamily(
+    Font(R.font.pacifico, FontWeight.Normal)
+)
+
 // Premium typography for Photo & Memes Maker with Devanagari & Latin script support
 val Typography = Typography(
     displayLarge = TextStyle(

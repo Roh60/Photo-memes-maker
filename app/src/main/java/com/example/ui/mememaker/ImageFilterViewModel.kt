@@ -54,6 +54,7 @@ data class ImageFilterUiState(
     val contrast: Float = 1.0f,       // 0.5f to 2.0f (default 1.0f)
     val saturation: Float = 1.0f,     // 0.0f to 2.5f (default 1.0f)
     val sepia: Float = 0.0f,          // 0.0f to 1.0f (default 0.0f)
+    val filterIntensity: Float = 1.0f, // 0.0f to 1.0f
     val activePreset: String = "none",
     val isProcessing: Boolean = false,
     val thumbnails: List<FilterThumbnail> = emptyList(),
@@ -104,6 +105,11 @@ class ImageFilterViewModel : ViewModel() {
         applyFilters()
     }
 
+    fun setFilterIntensity(intensity: Float) {
+        _uiState.update { it.copy(filterIntensity = intensity.coerceIn(0f, 1f)) }
+        applyFilters()
+    }
+
     fun applyPreset(preset: String) {
         val normalizedKey = when (preset.lowercase()) {
             "bw" -> "grayscale"
@@ -122,6 +128,7 @@ class ImageFilterViewModel : ViewModel() {
                 contrast = definition.contrast,
                 saturation = definition.saturation,
                 sepia = definition.sepia,
+                filterIntensity = 1.0f,
                 activePreset = definition.id
             )
         }
@@ -136,6 +143,7 @@ class ImageFilterViewModel : ViewModel() {
                 contrast = defaultDef.contrast,
                 saturation = defaultDef.saturation,
                 sepia = defaultDef.sepia,
+                filterIntensity = 1.0f,
                 activePreset = "none"
             )
         }
@@ -235,7 +243,8 @@ class ImageFilterViewModel : ViewModel() {
                     contrast = state.contrast,
                     saturation = state.saturation,
                     sepia = state.sepia,
-                    presetId = state.activePreset
+                    presetId = state.activePreset,
+                    intensity = state.filterIntensity
                 )
 
                 BitmapUtils.processBitmap(
@@ -251,14 +260,15 @@ class ImageFilterViewModel : ViewModel() {
 
     companion object {
         /**
-         * Construct ColorMatrix combining Sepia, Saturation, Contrast, Brightness, and Preset adjustments.
+         * Construct ColorMatrix combining Sepia, Saturation, Contrast, Brightness, Preset adjustments, and Intensity.
          */
         fun buildColorMatrix(
             brightness: Float,
             contrast: Float,
             saturation: Float,
             sepia: Float,
-            presetId: String = "none"
+            presetId: String = "none",
+            intensity: Float = 1.0f
         ): ColorMatrix {
             val colorMatrix = ColorMatrix()
 

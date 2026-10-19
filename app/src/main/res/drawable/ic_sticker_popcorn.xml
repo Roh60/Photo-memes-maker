@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Popcorn Tub Base Red -->
+    <path
+        android:fillColor="#E53935"
+        android:pathData="M24,40 L30,88 L66,88 L72,40 Z" />
+    <!-- White Stripes on Tub -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M33,40 L37,88 L43,88 L40,40 Z M53,40 L50,88 L56,88 L60,40 Z" />
+    <!-- Golden Fluffy Popcorn Tops -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M26,38 C22,34 22,26 28,24 C30,18 38,18 42,22 C46,16 56,16 60,22 C66,18 74,22 72,28 C78,32 76,40 70,42 C64,44 32,44 26,38 Z" />
+    <path
+        android:fillColor="#FFA000"
+        android:pathData="M36,28 C34,26 34,22 38,22 C40,22 42,24 40,26 Z M54,26 C52,24 54,20 58,22 C60,24 58,28 54,26 Z M46,34 C44,32 46,28 50,30 C52,32 50,36 46,34 Z" />
+</vector>

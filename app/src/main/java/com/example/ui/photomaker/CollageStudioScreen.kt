@@ -19,6 +19,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -42,6 +43,7 @@ import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -107,6 +109,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun CollageStudioScreen(
     initialTemplateId: String? = null,
+    initialBitmaps: List<Bitmap>? = null,
     onNavigateBack: () -> Unit
 ) {
     BackHandler { onNavigateBack() }
@@ -128,9 +131,9 @@ fun CollageStudioScreen(
     // State per slot (slotId -> CollageSlotState)
     val slotStates = remember { mutableStateMapOf<Int, CollageSlotState>() }
 
-    // Initialize initial default sample photos for slots 1 and 2
+    // Initialize initial default sample photos for slots 1 and 2 if none provided
     LaunchedEffect(Unit) {
-        if (slotStates.isEmpty()) {
+        if (slotStates.isEmpty() && initialBitmaps.isNullOrEmpty()) {
             slotStates[1] = CollageSlotState(
                 slotId = 1,
                 bitmap = SampleImages.createScenicSample(600, 600, "Left Photo", 0xFF6366F1.toInt(), 0xFF8B5CF6.toInt())
@@ -139,6 +142,20 @@ fun CollageStudioScreen(
                 slotId = 2,
                 bitmap = SampleImages.createScenicSample(600, 600, "Right Photo", 0xFFEC4899.toInt(), 0xFFF43F5E.toInt())
             )
+        }
+    }
+
+    // Populate initialBitmaps if passed in from dual-photo picker
+    LaunchedEffect(initialBitmaps) {
+        if (!initialBitmaps.isNullOrEmpty()) {
+            if (initialBitmaps.size >= 1) {
+                val s1 = slotStates[1] ?: CollageSlotState(slotId = 1)
+                slotStates[1] = s1.copy(bitmap = initialBitmaps[0])
+            }
+            if (initialBitmaps.size >= 2) {
+                val s2 = slotStates[2] ?: CollageSlotState(slotId = 2)
+                slotStates[2] = s2.copy(bitmap = initialBitmaps[1])
+            }
         }
     }
 
@@ -178,6 +195,48 @@ fun CollageStudioScreen(
                     bottomTab = "adjust"
                 }
             }
+        }
+    }
+
+    // Dual-photo gallery picker to combine 2 photos into a dual-image layout
+    val dualPhotoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 2)
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            scope.launch {
+                // Switch to a 2-photo template if not currently using one
+                if (currentTemplate.photoCount != 2) {
+                    currentTemplate = CollageTemplateRepository.getTemplateById("2_side_by_side")
+                }
+                if (uris.size >= 1) {
+                    val bmp1 = BitmapUtils.decodeUriToBitmap(context, uris[0])
+                    if (bmp1 != null) {
+                        val s1 = slotStates[1] ?: CollageSlotState(slotId = 1)
+                        slotStates[1] = s1.copy(bitmap = bmp1)
+                    }
+                }
+                if (uris.size >= 2) {
+                    val bmp2 = BitmapUtils.decodeUriToBitmap(context, uris[1])
+                    if (bmp2 != null) {
+                        val s2 = slotStates[2] ?: CollageSlotState(slotId = 2)
+                        slotStates[2] = s2.copy(bitmap = bmp2)
+                    }
+                    Toast.makeText(context, "Applied 2 photos to collage frame!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Loaded 1 photo. Tap next slot to pick another.", Toast.LENGTH_SHORT).show()
+                }
+                activeSlotId = 1
+            }
+        }
+    }
+
+    fun swapDualSlots() {
+        val s1 = slotStates[1]
+        val s2 = slotStates[2]
+        if (s1?.bitmap != null || s2?.bitmap != null) {
+            slotStates[1] = (s2 ?: CollageSlotState(slotId = 1)).copy(slotId = 1)
+            slotStates[2] = (s1 ?: CollageSlotState(slotId = 2)).copy(slotId = 2)
+            Toast.makeText(context, "Swapped photo 1 and photo 2!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -349,6 +408,26 @@ fun CollageStudioScreen(
                 title = "Collage: ${currentTemplate.name}",
                 onBack = onNavigateBack,
                 actions = {
+                    if (currentTemplate.photoCount == 2) {
+                        IconButton(
+                            onClick = { swapDualSlots() },
+                            modifier = Modifier.testTag("collage_swap_slots_btn")
+                        ) {
+                            Icon(Icons.Default.SwapHoriz, contentDescription = "Swap Photos")
+                        }
+                    }
+
+                    IconButton(
+                        onClick = {
+                            dualPhotoPicker.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        modifier = Modifier.testTag("collage_top_pick_dual_btn")
+                    ) {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = "Select 2 Photos")
+                    }
+
                     IconButton(
                         onClick = { fillAllSlotsWithSamples() },
                         modifier = Modifier.testTag("collage_fill_samples_btn")
@@ -413,12 +492,72 @@ fun CollageStudioScreen(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            // Dual-Frame Quick Action Bar (when working on 2-photo layouts)
+            if (currentTemplate.photoCount == 2) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🖼️", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Dual Frame: ${currentTemplate.name}",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                        }
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            OutlinedButton(
+                                onClick = { swapDualSlots() },
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .testTag("dual_bar_swap_btn"),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                Icon(Icons.Default.SwapHoriz, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Text("Swap", fontSize = 11.sp)
+                            }
+
+                            Button(
+                                onClick = {
+                                    dualPhotoPicker.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .testTag("dual_bar_pick_two_btn"),
+                                contentPadding = PaddingValues(horizontal = 10.dp)
+                            ) {
+                                Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Select 2 Photos", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+
             // Main Canvas viewport (occupies top weighted space)
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                    .padding(horizontal = 14.dp, vertical = 4.dp),
                 contentAlignment = Alignment.Center
             ) {
                 CollageGridCanvas(
@@ -510,6 +649,11 @@ fun CollageStudioScreen(
                                         if (activeSlotId != null && activeSlotId!! > newTpl.photoCount) {
                                             activeSlotId = 1
                                         }
+                                    },
+                                    onPickDualPhotos = {
+                                        dualPhotoPicker.launch(
+                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        )
                                     }
                                 )
                             }
@@ -600,7 +744,8 @@ private fun TemplatesSelectorTab(
     currentTemplate: CollageTemplate,
     categoryFilter: String,
     onSelectCategory: (String) -> Unit,
-    onSelectTemplate: (CollageTemplate) -> Unit
+    onSelectTemplate: (CollageTemplate) -> Unit,
+    onPickDualPhotos: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Category chips: All, 2 Photos, 3 Photos, 4 Photos, 5 Photos, 6 Photos
@@ -634,6 +779,52 @@ private fun TemplatesSelectorTab(
                 CollageTemplateRepository.TEMPLATES
             } else {
                 CollageTemplateRepository.TEMPLATES.filter { it.category == categoryFilter }
+            }
+        }
+
+        // Spotlight banner when browsing 2 Photos
+        if (categoryFilter == "2 Photos") {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Dual-Image Collage Frames (${filteredTemplates.size})",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = "Tap a frame below to switch, or pick 2 photos to fill",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                    Button(
+                        onClick = onPickDualPhotos,
+                        modifier = Modifier.testTag("tab_pick_dual_photos_btn"),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Select 2", fontSize = 11.sp)
+                    }
+                }
             }
         }
 

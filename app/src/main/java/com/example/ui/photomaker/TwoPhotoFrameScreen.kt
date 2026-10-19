@@ -184,6 +184,37 @@ fun TwoPhotoFrameScreen(
         }
     }
 
+    // Dual-photo gallery launcher
+    val dualGalleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 2)
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            scope.launch {
+                isProcessing = true
+                if (uris.size >= 1) {
+                    val bmp1 = BitmapUtils.decodeUriToBitmap(context, uris[0])
+                    if (bmp1 != null) photo1 = bmp1
+                }
+                if (uris.size >= 2) {
+                    val bmp2 = BitmapUtils.decodeUriToBitmap(context, uris[1])
+                    if (bmp2 != null) photo2 = bmp2
+                    Toast.makeText(context, "Loaded 2 photos from gallery!", Toast.LENGTH_SHORT).show()
+                }
+                isProcessing = false
+            }
+        }
+    }
+
+    fun swapPhotos() {
+        val temp = photo1
+        photo1 = photo2
+        photo2 = temp
+        val tempFilter = photo1Filter
+        photo1Filter = photo2Filter
+        photo2Filter = tempFilter
+        Toast.makeText(context, "Swapped photo 1 and photo 2", Toast.LENGTH_SHORT).show()
+    }
+
     // Export renderer
     fun generateTwoFrameExport(): Bitmap {
         val width = 1080
@@ -696,7 +727,6 @@ fun TwoPhotoFrameScreen(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
                         }
-                        // Camera & Gallery action for active target
                         Surface(
                             shape = CircleShape,
                             color = Color.Black.copy(alpha = 0.6f),
@@ -712,6 +742,31 @@ fun TwoPhotoFrameScreen(
                             }.testTag("two_frame_gallery")
                         ) {
                             Icon(Icons.Default.PhotoLibrary, contentDescription = "Gallery", tint = Color.White, modifier = Modifier.padding(6.dp).size(18.dp))
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier
+                                .clickable {
+                                    dualGalleryLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                }
+                                .testTag("two_frame_select_both_btn")
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Select 2",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

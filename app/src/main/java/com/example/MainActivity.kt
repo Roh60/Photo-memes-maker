@@ -35,8 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.example.ui.creations.MyCreationsScreen
-import com.example.ui.home.HomeScreen
 import com.example.ui.greetings.DailyGreetingsScreen
+import com.example.ui.home.HomeScreen
 import com.example.ui.mememaker.MemeStudioScreen
 import com.example.ui.mememaker.MemeTemplatesCatalogScreen
 import com.example.ui.navigation.MainTab
@@ -47,6 +47,7 @@ import com.example.ui.photomaker.TemplateEditorScreen
 import com.example.ui.camera.CameraCaptureScreen
 import com.example.ui.photomaker.TemplatesCatalogScreen
 import com.example.ui.photomaker.TwoPhotoFrameScreen
+import com.example.ui.quotesmaker.QuotesMakerScreen
 import com.example.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -72,6 +73,8 @@ fun MainAppContainer() {
 
     // Staging bitmap for PhotoStudio
     var stagedStudioBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var stagedCollageBitmaps by remember { mutableStateOf<List<Bitmap>?>(null) }
+    var stagedCollageTemplateId by remember { mutableStateOf<String?>("2_side_by_side") }
 
     fun navigateTo(screen: Screen) {
         screenStack.add(screen)
@@ -164,12 +167,27 @@ fun MainAppContainer() {
                                 navigateTo(Screen.PhotoStudio)
                             },
                             onLaunchCamera = { navigateTo(Screen.CameraScreen("photo_studio")) },
-                            onOpenTwoPhotoFrame = { navigateTo(Screen.TwoPhotoFrame) },
+                            onOpenTwoPhotoFrame = {
+                                stagedCollageTemplateId = "2_side_by_side"
+                                stagedCollageBitmaps = null
+                                navigateTo(Screen.TwoPhotoFrame)
+                            },
+                            onOpenCollageWithTemplate = { tplId ->
+                                stagedCollageTemplateId = tplId
+                                stagedCollageBitmaps = null
+                                navigateTo(Screen.CollageStudio(tplId))
+                            },
+                            onOpenCollageWithBitmaps = { bmps, tplId ->
+                                stagedCollageBitmaps = bmps
+                                stagedCollageTemplateId = tplId ?: "2_side_by_side"
+                                navigateTo(Screen.CollageStudio(tplId ?: "2_side_by_side", bmps))
+                            },
                             onOpenTemplate = { tplId -> navigateTo(Screen.TemplateEditor(tplId)) },
                             onOpenTemplatesCatalog = { navigateTo(Screen.TemplatesCatalog) },
                             onOpenMemeStudio = { memeId -> navigateTo(Screen.MemeStudio(memeId)) },
                             onOpenMemesCatalog = { navigateTo(Screen.MemesCatalog) },
                             onOpenCreations = { selectTab(MainTab.CREATIONS) },
+                            onOpenQuotesMaker = { qId, fId, tplId -> navigateTo(Screen.QuotesMaker(qId, fId, tplId)) },
                             onOpenDailyGreetings = { navigateTo(Screen.DailyGreetings) }
                         )
                     }
@@ -201,15 +219,25 @@ fun MainAppContainer() {
 
                     is Screen.TwoPhotoFrame -> {
                         CollageStudioScreen(
-                            initialTemplateId = "2_side_by_side",
-                            onNavigateBack = { navigateBack() }
+                            initialTemplateId = stagedCollageTemplateId ?: "2_side_by_side",
+                            initialBitmaps = stagedCollageBitmaps,
+                            onNavigateBack = {
+                                stagedCollageBitmaps = null
+                                stagedCollageTemplateId = null
+                                navigateBack()
+                            }
                         )
                     }
 
                     is Screen.CollageStudio -> {
                         CollageStudioScreen(
-                            initialTemplateId = targetScreen.templateId,
-                            onNavigateBack = { navigateBack() }
+                            initialTemplateId = targetScreen.templateId ?: stagedCollageTemplateId ?: "2_side_by_side",
+                            initialBitmaps = targetScreen.initialBitmaps ?: stagedCollageBitmaps,
+                            onNavigateBack = {
+                                stagedCollageBitmaps = null
+                                stagedCollageTemplateId = null
+                                navigateBack()
+                            }
                         )
                     }
 
@@ -228,10 +256,6 @@ fun MainAppContainer() {
                         )
                     }
 
-                    is Screen.DailyGreetings -> {
-                        DailyGreetingsScreen(onNavigateBack = { navigateBack() })
-                    }
-
                     is Screen.MyCreations -> {
                         MyCreationsScreen(
                             onResumeDraft = { draft ->
@@ -242,6 +266,26 @@ fun MainAppContainer() {
                                 }
                             },
                             onNavigateBack = { selectTab(MainTab.HOME) }
+                        )
+                    }
+
+                    is Screen.DailyGreetings -> {
+                        DailyGreetingsScreen(onNavigateBack = { navigateBack() })
+                    }
+
+                    is Screen.QuotesMaker -> {
+                        val initialFrame = targetScreen.initialFrameId?.let { id ->
+                            try {
+                                com.example.data.model.QuoteFrameStyle.valueOf(id)
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+                        QuotesMakerScreen(
+                            initialQuoteId = targetScreen.initialQuoteId,
+                            initialFrameStyle = initialFrame,
+                            initialTemplateId = targetScreen.initialTemplateId,
+                            onNavigateBack = { navigateBack() }
                         )
                     }
 

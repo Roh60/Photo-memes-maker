@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Blue Verified Tick Badge for Celebrities / Memes -->
+    <path
+        android:fillColor="#1D9BF0"
+        android:pathData="M48,8 L57.8,13.6 L68.8,11.2 L74.4,21 L84.2,26.6 L84.2,38 L89.8,48 L84.2,58 L84.2,69.4 L74.4,75 L68.8,84.8 L57.8,82.4 L48,88 L38.2,82.4 L27.2,84.8 L21.6,75 L11.8,69.4 L11.8,58 L6.2,48 L11.8,38 L11.8,26.6 L21.6,21 L27.2,11.2 L38.2,13.6 Z" />
+    <!-- White Checkmark -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,64 L24,48 L29.6,42.4 L40,52.8 L66.4,26.4 L72,32 Z" />
+</vector>

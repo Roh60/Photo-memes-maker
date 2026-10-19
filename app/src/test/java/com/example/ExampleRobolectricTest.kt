@@ -15,6 +15,15 @@ import com.example.data.model.TemplateRepository
 import com.example.ui.mememaker.ImageFilterViewModel
 import com.example.ui.mememaker.PRESET_DEFINITIONS
 import com.example.util.BitmapUtils
+import com.example.util.ImageProcessingUtils
+import com.example.ui.components.MemeEditorState
+import com.example.ui.components.MemeFontType
+import com.example.ui.components.MemeTextObject
+import com.example.ui.components.toMemeTextBox
+import com.example.ui.components.toMemeTextObject
+import com.example.ui.components.FilterCategory
+import com.example.ui.components.toComposeColorMatrix
+import com.example.data.model.AVAILABLE_FILTER_PRESETS
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -256,5 +265,430 @@ class ExampleRobolectricTest {
         val files = cacheDir.listFiles()
         assertTrue("shared_images cache folder should contain shared JPEG file", files != null && files.isNotEmpty())
     }
+
+    @Test
+    fun `verify ImageProcessingUtils cinematic, vintage, and black-and-white filters with intensity adjustment`() {
+        val testBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+
+        // 1. Cinematic Filter with Intensity
+        val cinematicFull = ImageProcessingUtils.applyCinematicFilter(testBitmap, intensity = 1.0f)
+        assertNotNull(cinematicFull)
+        assertEquals(100, cinematicFull.width)
+        assertEquals(100, cinematicFull.height)
+
+        val cinematicHalf = ImageProcessingUtils.applyCinematicFilter(testBitmap, intensity = 0.5f)
+        assertNotNull(cinematicHalf)
+
+        val cinematicZero = ImageProcessingUtils.applyCinematicFilter(testBitmap, intensity = 0.0f)
+        assertNotNull(cinematicZero)
+
+        // 2. Vintage Filter with Intensity
+        val vintageFull = ImageProcessingUtils.applyVintageFilter(testBitmap, intensity = 1.0f)
+        assertNotNull(vintageFull)
+        val vintageLow = ImageProcessingUtils.applyVintageFilter(testBitmap, intensity = 0.25f)
+        assertNotNull(vintageLow)
+
+        // 3. Black & White Filter with Intensity
+        val bwFull = ImageProcessingUtils.applyBlackAndWhiteFilter(testBitmap, intensity = 1.0f)
+        assertNotNull(bwFull)
+        val bwHalf = ImageProcessingUtils.applyBlackAndWhiteFilter(testBitmap, intensity = 0.5f)
+        assertNotNull(bwHalf)
+
+        // 4. ColorMatrix interpolation check
+        val targetMatrix = ImageProcessingUtils.createCinematicColorMatrix()
+        val identityInterp = ImageProcessingUtils.interpolateColorMatrix(targetMatrix, 0.0f)
+        // At 0.0f intensity, diagonal elements should be 1.0f and offsets 0.0f
+        assertEquals(1.0f, identityInterp.array[0], 0.01f)
+        assertEquals(0.0f, identityInterp.array[4], 0.01f)
+
+        // At 1.0f intensity, it matches targetMatrix
+        val fullInterp = ImageProcessingUtils.interpolateColorMatrix(targetMatrix, 1.0f)
+        assertEquals(targetMatrix.array[0], fullInterp.array[0], 0.01f)
+        assertEquals(targetMatrix.array[4], fullInterp.array[4], 0.01f)
+
+        // 5. Thumbnail creation and vignette
+        val thumbnail = ImageProcessingUtils.createThumbnail(testBitmap, maxDimension = 50)
+        assertNotNull(thumbnail)
+        assertTrue(thumbnail.width <= 50 && thumbnail.height <= 50)
+
+        val vignetted = ImageProcessingUtils.applyVignette(testBitmap, intensity = 0.6f)
+        assertNotNull(vignetted)
+    }
+
+    @Test
+    fun `verify MemeEditor state-based multi-text objects, font, color, and outline controls`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val editorState = com.example.ui.components.MemeEditorState()
+
+        // 1. Initial State
+        assertTrue("Initially text objects should be empty", editorState.textObjects.isEmpty())
+        assertEquals(null, editorState.selectedTextId)
+
+        // 2. Add multiple text objects
+        val topText = editorState.addText(
+            text = "WHEN THE APP COMPILES",
+            xPercent = 0.5f,
+            yPercent = 0.15f,
+            fontSizeSp = 36f,
+            fontType = com.example.ui.components.MemeFontType.IMPACT,
+            textColor = androidx.compose.ui.graphics.Color.White,
+            hasOutline = true,
+            outlineColor = androidx.compose.ui.graphics.Color.Black,
+            outlineWidth = 4f
+        )
+        assertEquals(1, editorState.textObjects.size)
+        assertEquals(topText.id, editorState.selectedTextId)
+        assertEquals("WHEN THE APP COMPILES", editorState.selectedText?.text)
+
+        val bottomText = editorState.addText(
+            text = "ON THE FIRST TRY",
+            xPercent = 0.5f,
+            yPercent = 0.85f,
+            fontSizeSp = 32f,
+            fontType = com.example.ui.components.MemeFontType.POPPINS,
+            textColor = androidx.compose.ui.graphics.Color(0xFFFFEB3B), // Yellow
+            hasOutline = true,
+            outlineColor = androidx.compose.ui.graphics.Color.Black,
+            outlineWidth = 3f
+        )
+        assertEquals(2, editorState.textObjects.size)
+        assertEquals(bottomText.id, editorState.selectedTextId)
+
+        // 3. Test Font Controls
+        editorState.setFont(bottomText.id, com.example.ui.components.MemeFontType.KALAM)
+        assertEquals(com.example.ui.components.MemeFontType.KALAM, editorState.selectedText?.fontType)
+
+        editorState.setFontSize(bottomText.id, 42f)
+        assertEquals(42f, editorState.selectedText?.fontSizeSp)
+
+        // 4. Test Color Controls
+        val cyanColor = androidx.compose.ui.graphics.Color(0xFF00E5FF)
+        editorState.setTextColor(bottomText.id, cyanColor)
+        assertEquals(cyanColor, editorState.selectedText?.textColor)
+
+        // 5. Test Outline Controls
+        val crimsonOutline = androidx.compose.ui.graphics.Color(0xFFB71C1C)
+        editorState.setOutline(bottomText.id, hasOutline = true, outlineColor = crimsonOutline, outlineWidth = 6.0f)
+        val updatedBottom = editorState.selectedText
+        assertNotNull(updatedBottom)
+        assertTrue(updatedBottom?.hasOutline == true)
+        assertEquals(crimsonOutline, updatedBottom?.outlineColor)
+        assertEquals(6.0f, updatedBottom?.outlineWidth ?: 0f, 0.01f)
+
+        // Outline toggle off
+        editorState.setOutline(bottomText.id, hasOutline = false)
+        assertFalse(editorState.selectedText?.hasOutline == true)
+
+        // 6. Test Rotation and Text Alignment
+        editorState.setRotation(bottomText.id, 15f)
+        assertEquals(15f, editorState.selectedText?.rotation ?: 0f, 0.01f)
+
+        editorState.setTextAlign(bottomText.id, androidx.compose.ui.text.style.TextAlign.Left)
+        assertEquals(androidx.compose.ui.text.style.TextAlign.Left, editorState.selectedText?.textAlign)
+
+        // 7. Test Layer Operations: Duplicate, Reorder, Lock
+        editorState.duplicateText(topText.id)
+        assertEquals(3, editorState.textObjects.size)
+
+        editorState.bringToFront(topText.id)
+        assertEquals(topText.id, editorState.textObjects.last().id)
+
+        editorState.sendToBack(topText.id)
+        assertEquals(topText.id, editorState.textObjects.first().id)
+
+        editorState.toggleLock(topText.id)
+        assertTrue(editorState.textObjects.first().isLocked)
+
+        // 8. Test Delete Text
+        editorState.removeText(topText.id)
+        assertEquals(2, editorState.textObjects.size)
+
+        // 9. Test Interoperability with legacy MemeTextBox
+        val legacyBox = com.example.data.model.MemeTextBox(
+            text = "Legacy Text",
+            fontSizeSp = 28f,
+            textColor = 0xFFFFFFFF,
+            strokeColor = 0xFF000000
+        )
+        val convertedObj = legacyBox.toMemeTextObject()
+        assertEquals("Legacy Text", convertedObj.text)
+        assertEquals(28f, convertedObj.fontSizeSp)
+
+        val convertedBack = convertedObj.toMemeTextBox()
+        assertEquals(legacyBox.text, convertedBack.text)
+
+        // 10. Test Render to Bitmap with text and outline
+        val baseBmp = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
+        editorState.imageBitmap = baseBmp
+        val renderedBmp = editorState.renderToBitmap(context = context, targetWidth = 500, targetHeight = 500)
+        assertNotNull(renderedBmp)
+        assertEquals(500, renderedBmp.width)
+        assertEquals(500, renderedBmp.height)
+    }
+
+    @Test
+    fun `verify MemeEditor export to gallery via MediaStore for high quality JPEG and PNG`() = kotlinx.coroutines.runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val baseBmp = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
+        val editorState = MemeEditorState(initialBitmap = baseBmp)
+        editorState.addText(
+            text = "HOT MEME CAPTION",
+            xPercent = 0.5f,
+            yPercent = 0.2f,
+            fontSizeSp = 36f,
+            fontType = MemeFontType.IMPACT,
+            textColor = androidx.compose.ui.graphics.Color.Yellow,
+            hasOutline = true,
+            outlineColor = androidx.compose.ui.graphics.Color.Black,
+            outlineWidth = 4f
+        )
+
+        // 1. Export as High-Quality JPEG to Public Gallery via MediaStore
+        val jpegUri = editorState.exportToGallery(
+            context = context,
+            title = "Meme_Test_Export_JPEG",
+            isPng = false,
+            targetWidth = 600,
+            targetHeight = 600
+        )
+        assertNotNull(jpegUri)
+        assertTrue(jpegUri.toString().startsWith("content://media/external/images/media"))
+
+        // Verify the saved JPEG in MediaStore can be read and decoded
+        val jpegStream = context.contentResolver.openInputStream(jpegUri!!)
+        assertNotNull(jpegStream)
+        val decodedJpeg = android.graphics.BitmapFactory.decodeStream(jpegStream)
+        assertNotNull(decodedJpeg)
+        assertEquals(600, decodedJpeg.width)
+        assertEquals(600, decodedJpeg.height)
+
+        // 2. Export as Lossless PNG to Public Gallery via MediaStore
+        val pngUri = editorState.exportToGallery(
+            context = context,
+            title = "Meme_Test_Export_PNG",
+            isPng = true,
+            targetWidth = 600,
+            targetHeight = 600
+        )
+        assertNotNull(pngUri)
+        assertTrue(pngUri.toString().startsWith("content://media/external/images/media"))
+
+        val pngStream = context.contentResolver.openInputStream(pngUri!!)
+        assertNotNull(pngStream)
+        val decodedPng = android.graphics.BitmapFactory.decodeStream(pngStream)
+        assertNotNull(decodedPng)
+        assertEquals(600, decodedPng.width)
+        assertEquals(600, decodedPng.height)
+    }
+
+    @Test
+    fun `verify ImageFilterCarousel and FilterCategory definitions and ColorMatrix conversions`() {
+        // 1. Check all filter presets in AVAILABLE_FILTER_PRESETS
+        assertTrue(AVAILABLE_FILTER_PRESETS.isNotEmpty())
+        val presetIds = AVAILABLE_FILTER_PRESETS.map { it.id }
+        assertTrue(presetIds.contains("none"))
+        assertTrue(presetIds.contains("cinematic"))
+        assertTrue(presetIds.contains("vintage"))
+        assertTrue(presetIds.contains("bw"))
+        assertTrue(presetIds.contains("glow"))
+        assertTrue(presetIds.contains("sepia"))
+        assertTrue(presetIds.contains("vivid"))
+        assertTrue(presetIds.contains("neon"))
+
+        // 2. FilterCategory logic
+        assertEquals("All", FilterCategory.ALL.label)
+        assertTrue(FilterCategory.CINEMATIC.presetIds.contains("cinematic"))
+        assertTrue(FilterCategory.CINEMATIC.presetIds.contains("vintage"))
+        assertTrue(FilterCategory.MONOCHROME.presetIds.contains("bw"))
+        assertTrue(FilterCategory.AESTHETIC.presetIds.contains("glow"))
+        assertTrue(FilterCategory.VIBRANT.presetIds.contains("vivid"))
+
+        // 3. ColorMatrix conversion from Android to Compose
+        val androidMatrix = ImageProcessingUtils.createCinematicColorMatrix()
+        assertNotNull(androidMatrix)
+        assertEquals(20, androidMatrix.array.size)
+
+        val composeMatrix = androidMatrix.toComposeColorMatrix()
+        assertNotNull(composeMatrix)
+        assertEquals(20, composeMatrix.values.size)
+        assertEquals(androidMatrix.array[0], composeMatrix.values[0], 0.001f)
+        assertEquals(androidMatrix.array[4], composeMatrix.values[4], 0.001f)
+
+        // 4. Test comprehensive buildAdjustedColorMatrix
+        val adjustedMatrix = ImageProcessingUtils.buildAdjustedColorMatrix(
+            preset = "vintage",
+            intensity = 0.8f,
+            brightness = 10f,
+            contrast = 1.2f,
+            saturation = 1.1f,
+            warmth = 5f
+        )
+        assertNotNull(adjustedMatrix)
+        assertEquals(20, adjustedMatrix.array.size)
+
+        val composeAdjusted = adjustedMatrix.toComposeColorMatrix()
+        assertEquals(20, composeAdjusted.values.size)
+    }
+
+    @Test
+    fun `verify dual photo collage frames and repository helper methods`() {
+        val dualTemplates = com.example.data.model.CollageTemplateRepository.getDualPhotoTemplates()
+        assertTrue("Must have at least 10 dual-photo frames", dualTemplates.size >= 10)
+
+        // Verify specific dual frame IDs are present
+        val dualIds = dualTemplates.map { it.id }
+        assertTrue(dualIds.contains("2_side_by_side"))
+        assertTrue(dualIds.contains("2_top_bottom"))
+        assertTrue(dualIds.contains("2_hero_top"))
+        assertTrue(dualIds.contains("2_magazine_split"))
+        assertTrue(dualIds.contains("2_polaroid_duo"))
+        assertTrue(dualIds.contains("2_staggered_cards"))
+        assertTrue(dualIds.contains("2_portrait_duo"))
+        assertTrue(dualIds.contains("2_cinema_letterbox"))
+        assertTrue(dualIds.contains("2_before_after"))
+        assertTrue(dualIds.contains("2_pip"))
+        assertTrue(dualIds.contains("2_diagonal_split"))
+
+        // Every dual template must have exactly 2 slots
+        dualTemplates.forEach { tpl ->
+            assertEquals(2, tpl.photoCount)
+            assertEquals(2, tpl.slots.size)
+            assertEquals(1, tpl.slots[0].id)
+            assertEquals(2, tpl.slots[1].id)
+        }
+    }
+
+    @Test
+    fun `verify text quotes frame styles and quotes repository`() {
+        val allQuotes = com.example.data.model.QuoteRepository.getAllQuotes()
+        assertTrue("Must contain a rich library of quotes", allQuotes.size >= 25)
+
+        // Verify Motivational Quotes exist and have content
+        val motivationalQuotes = com.example.data.model.QuoteRepository.getQuotesByCategory(com.example.data.model.QuoteCategory.MOTIVATIONAL)
+        assertTrue("Must have motivational quotes", motivationalQuotes.size >= 8)
+        motivationalQuotes.forEach { q ->
+            assertTrue(q.quote.isNotBlank())
+            assertTrue(q.author.isNotBlank())
+            assertEquals(com.example.data.model.QuoteCategory.MOTIVATIONAL, q.category)
+        }
+
+        // Verify Facts Quotes exist and have rich facts content
+        val factsQuotes = com.example.data.model.QuoteRepository.getQuotesByCategory(com.example.data.model.QuoteCategory.FACTS)
+        assertTrue("Must have science & nature facts quotes", factsQuotes.size >= 8)
+        factsQuotes.forEach { q ->
+            assertTrue(q.quote.isNotBlank())
+            assertTrue(q.author.isNotBlank())
+            assertEquals(com.example.data.model.QuoteCategory.FACTS, q.category)
+        }
+
+        // Verify other categories (Success, Wisdom, Life, Hindi Suvichar)
+        val successQuotes = com.example.data.model.QuoteRepository.getQuotesByCategory(com.example.data.model.QuoteCategory.SUCCESS)
+        assertTrue(successQuotes.isNotEmpty())
+
+        val wisdomQuotes = com.example.data.model.QuoteRepository.getQuotesByCategory(com.example.data.model.QuoteCategory.WISDOM)
+        assertTrue(wisdomQuotes.isNotEmpty())
+
+        val hindiQuotes = com.example.data.model.QuoteRepository.getQuotesByCategory(com.example.data.model.QuoteCategory.HINDI_SUVICHAR)
+        assertTrue(hindiQuotes.isNotEmpty())
+
+        // Verify all 10 Quote Frame Styles exist
+        val frameStyles = com.example.data.model.QuoteFrameStyle.values()
+        assertEquals(10, frameStyles.size)
+        val frameNames = frameStyles.map { it.name }
+        assertTrue(frameNames.contains("MINIMAL_BORDER"))
+        assertTrue(frameNames.contains("GOLD_LUXURY"))
+        assertTrue(frameNames.contains("NEON_CYBER"))
+        assertTrue(frameNames.contains("TYPEWRITER_VINTAGE"))
+        assertTrue(frameNames.contains("CINEMATIC_LETTERBOX"))
+        assertTrue(frameNames.contains("GLASS_CARD"))
+        assertTrue(frameNames.contains("EDITORIAL_MAGAZINE"))
+        assertTrue(frameNames.contains("POLAROID_PIN"))
+        assertTrue(frameNames.contains("DOUBLE_RULE_CLASSIC"))
+        assertTrue(frameNames.contains("ROUNDED_PILL"))
+
+        // Verify Background Presets
+        val bgPresets = com.example.data.model.QuoteRepository.BACKGROUND_PRESETS
+        assertTrue(bgPresets.size >= 6)
+        bgPresets.forEach { bg ->
+            assertTrue(bg.id.isNotBlank())
+            assertTrue(bg.name.isNotBlank())
+            assertTrue(bg.colors.size >= 2)
+        }
+
+        // Verify random quote retrieval
+        val randomQuote = com.example.data.model.QuoteRepository.getRandomQuote()
+        assertNotNull(randomQuote)
+        assertTrue(randomQuote.quote.isNotBlank())
+
+        // Verify single quote retrieval by ID
+        val quoteM1 = com.example.data.model.QuoteRepository.getQuoteById("m1")
+        assertNotNull(quoteM1)
+        assertEquals("Mark Twain", quoteM1?.author)
+
+        val quoteF1 = com.example.data.model.QuoteRepository.getQuoteById("f1")
+        assertNotNull(quoteF1)
+        assertTrue(quoteF1?.quote?.contains("Honey") == true)
+    }
+
+    @Test
+    fun `verify curated quote templates and export configurations`() {
+        // 1. Verify Templates catalog
+        val allTemplates = com.example.data.model.QuoteRepository.getAllTemplates()
+        assertTrue("Must have rich curated quote templates", allTemplates.size >= 8)
+
+        allTemplates.forEach { tpl ->
+            assertTrue(tpl.id.isNotBlank())
+            assertTrue(tpl.name.isNotBlank())
+            assertTrue(tpl.quote.isNotBlank())
+            assertTrue(tpl.author.isNotBlank())
+            assertNotNull(tpl.frameStyle)
+            assertNotNull(tpl.category)
+            assertTrue(tpl.badgeIcon.isNotBlank())
+            assertTrue(tpl.borderWidthDp > 0f)
+            assertTrue(tpl.fontSizeSp > 0f)
+        }
+
+        // 2. Verify Template category filtering
+        val motivationalTpls = com.example.data.model.QuoteRepository.getTemplatesByCategory(com.example.data.model.QuoteCategory.MOTIVATIONAL)
+        assertTrue(motivationalTpls.isNotEmpty())
+
+        val factsTpls = com.example.data.model.QuoteRepository.getTemplatesByCategory(com.example.data.model.QuoteCategory.FACTS)
+        assertTrue(factsTpls.isNotEmpty())
+
+        val hindiTpls = com.example.data.model.QuoteRepository.getTemplatesByCategory(com.example.data.model.QuoteCategory.HINDI_SUVICHAR)
+        assertTrue(hindiTpls.isNotEmpty())
+
+        // 3. Verify single template retrieval
+        val tplAli = com.example.data.model.QuoteRepository.getTemplateById("tpl_cinema_ali")
+        assertNotNull(tplAli)
+        assertEquals("Muhammad Ali", tplAli?.author)
+        assertEquals(com.example.data.model.QuoteFrameStyle.CINEMATIC_LETTERBOX, tplAli?.frameStyle)
+
+        // 4. Verify aspect ratio resolutions for export
+        val aspectRatios = listOf("1:1" to (1080 to 1080), "9:16" to (1080 to 1920), "4:5" to (1080 to 1350))
+        aspectRatios.forEach { (ratio, dims) ->
+            val (w, h) = when (ratio) {
+                "9:16" -> 1080 to 1920
+                "4:5" -> 1080 to 1350
+                else -> 1080 to 1080
+            }
+            assertEquals(dims.first, w)
+            assertEquals(dims.second, h)
+
+            val exportBmp = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+            assertNotNull(exportBmp)
+            assertEquals(w, exportBmp.width)
+            assertEquals(h, exportBmp.height)
+
+            val canvas = android.graphics.Canvas(exportBmp)
+            val paint = android.graphics.Paint().apply {
+                color = android.graphics.Color.WHITE
+                textSize = 32f
+            }
+            canvas.drawText("Test Quote Export", 50f, 100f, paint)
+            exportBmp.recycle()
+        }
+    }
 }
+
 

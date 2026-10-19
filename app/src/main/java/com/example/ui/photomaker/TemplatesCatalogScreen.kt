@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -67,7 +66,7 @@ fun TemplatesCatalogScreen(
 ) {
     BackHandler { onNavigateBack() }
 
-    var selectedTab by remember { mutableStateOf("All") } // "All", "Festivals", "Stylish"
+    var selectedTab by remember { mutableStateOf("All") } // "All", "👑 Premium", "Festivals", "Stylish"
     var searchQuery by remember { mutableStateOf("") }
 
     val allTemplates = remember { TemplateRepository.getAllTemplates() }
@@ -75,6 +74,7 @@ fun TemplatesCatalogScreen(
     val filteredTemplates = remember(selectedTab, searchQuery) {
         allTemplates.filter { t ->
             val matchesCategory = when (selectedTab) {
+                "👑 Premium" -> t.isPremium || t.category == TemplateCategory.PREMIUM
                 "Festivals" -> t.category == TemplateCategory.FESTIVAL
                 "Stylish" -> t.category == TemplateCategory.STYLISH
                 else -> true
@@ -105,7 +105,7 @@ fun TemplatesCatalogScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Search Diwali, Holi, Birthday, Attitude...") },
+                placeholder = { Text("Search Royal Vivah, Cyberpunk, Diwali, Vogue...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -123,7 +123,7 @@ fun TemplatesCatalogScreen(
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("All", "Festivals", "Stylish").forEach { tab ->
+                listOf("All", "👑 Premium", "Festivals", "Stylish").forEach { tab ->
                     FilterChip(
                         selected = selectedTab == tab,
                         onClick = { selectedTab = tab },
@@ -186,55 +186,45 @@ fun TemplateCatalogCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                // Layered mini-poster preview: title, framed artwork, and footer.
-                // This makes each card feel closer to the actual export than a lone emoji.
-                Column(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = 8.dp, vertical = 7.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = template.headerTitle,
-                        color = Color(template.textColor),
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Surface(
-                        shape = when (template.frameShape) {
-                            "circle" -> CircleShape
-                            "rect" -> RoundedCornerShape(5.dp)
-                            else -> RoundedCornerShape(12.dp)
-                        },
-                        color = Color.White.copy(alpha = 0.22f),
-                        border = androidx.compose.foundation.BorderStroke(
-                            width = 2.dp,
-                            color = Color(template.frameBorderColor).copy(alpha = 0.9f)
-                        ),
-                        modifier = Modifier.size(58.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(text = template.decorativeEmoji, fontSize = 27.sp)
-                        }
-                    }
-                    Text(
-                        text = template.defaultGreeting,
-                        color = Color(template.textColor).copy(alpha = 0.92f),
-                        fontSize = 8.sp,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                // Outer glow decor
                 Text(
                     text = template.cornerDecorEmoji,
-                    fontSize = 16.sp,
-                    modifier = Modifier.align(Alignment.TopEnd).padding(5.dp)
+                    fontSize = 20.sp,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
                 )
+
+                // Premium Badge
+                if (template.isPremium) {
+                    Surface(
+                        shape = RoundedCornerShape(bottomEnd = 10.dp),
+                        color = Color(0xFFD97706),
+                        modifier = Modifier.align(Alignment.TopStart)
+                    ) {
+                        Text(
+                            text = "👑 PRO",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                // Miniature Frame
+                Surface(
+                    shape = if (template.frameShape == "circle") CircleShape else RoundedCornerShape(14.dp),
+                    color = Color.White.copy(alpha = 0.25f),
+                    modifier = Modifier.size(68.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = template.decorativeEmoji,
+                            fontSize = 32.sp
+                        )
+                    }
+                }
             }
 
             // Template Info Details

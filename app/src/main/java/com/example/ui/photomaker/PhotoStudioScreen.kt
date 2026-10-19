@@ -63,8 +63,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import com.example.data.model.LayerItem
 import com.example.data.model.LayerOrderAction
 import com.example.data.model.LayerUtils
-import com.example.ui.components.LayerManagementSidebar
+import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.FilterChip
+import com.example.ui.components.ImageFilterBottomSheet
+import com.example.ui.components.ImageFilterCarousel
+import com.example.ui.components.LayerManagementSidebar
+import com.example.ui.components.TextOverlayEditorSheet
+import com.example.ui.components.TextOverlayUtils
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -142,7 +147,6 @@ fun PhotoStudioScreen(
     var sourceBitmap by remember {
         mutableStateOf<Bitmap?>(initialBitmap ?: SampleImages.createScenicSample(800, 800, "Sunset Glow"))
     }
-
     var isComparingOriginal by remember { mutableStateOf(false) }
     var isProcessing by remember { mutableStateOf(false) }
 
@@ -150,16 +154,6 @@ fun PhotoStudioScreen(
     var adjustment by remember { mutableStateOf(PhotoAdjustment()) }
     var history by remember { mutableStateOf(listOf(PhotoAdjustment())) }
     var historyIndex by remember { mutableIntStateOf(0) }
-
-    // Keep the editor in sync when a new gallery/camera bitmap arrives.
-    LaunchedEffect(initialBitmap) {
-        if (initialBitmap != null && initialBitmap !== sourceBitmap) {
-            sourceBitmap = initialBitmap
-            adjustment = PhotoAdjustment()
-            history = listOf(PhotoAdjustment())
-            historyIndex = 0
-        }
-    }
 
     // Aspect ratio: 1.0 (1:1), 0.8 (4:5), 1.777 (16:9), 0.5625 (9:16)
     var selectedAspectRatio by remember { mutableFloatStateOf(1.0f) }
@@ -172,6 +166,9 @@ fun PhotoStudioScreen(
     // Sticker Overlays
     val placedStickers = remember { mutableStateListOf<PlacedSticker>() }
     var showStickerSheet by remember { mutableStateOf(false) }
+
+    // Filter Bottom Sheet State
+    var showFilterBottomSheet by remember { mutableStateOf(false) }
 
     // Layer Management Sidebar & Ordering
     var showLayersSidebar by remember { mutableStateOf(false) }
@@ -198,7 +195,8 @@ fun PhotoStudioScreen(
                 contrast = adjustment.contrast,
                 saturation = adjustment.saturation,
                 warmth = adjustment.warmth,
-                filterType = adjustment.filterPreset
+                filterType = adjustment.filterPreset,
+                filterIntensity = adjustment.filterIntensity
             )
             val processed = BitmapUtils.processBitmap(
                 source = src,
@@ -218,29 +216,14 @@ fun PhotoStudioScreen(
         if (uri != null) {
             scope.launch {
                 isProcessing = true
-                try {
-                    val bmp = BitmapUtils.decodeUriToBitmap(context, uri)
-                    if (bmp != null) {
-                        sourceBitmap = bmp
-                        adjustment = PhotoAdjustment()
-                        history = listOf(PhotoAdjustment())
-                        historyIndex = 0
-                    } else {
-                        Toast.makeText(
-                            context,
-                            "Photo decode nahi hui. Dusri image try karein.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                } catch (_: Exception) {
-                    Toast.makeText(
-                        context,
-                        "Photo load karte waqt error aaya.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } finally {
-                    isProcessing = false
+                val bmp = BitmapUtils.decodeUriToBitmap(context, uri)
+                if (bmp != null) {
+                    sourceBitmap = bmp
+                    adjustment = PhotoAdjustment()
+                    history = listOf(PhotoAdjustment())
+                    historyIndex = 0
                 }
+                isProcessing = false
             }
         }
     }
@@ -278,6 +261,15 @@ fun PhotoStudioScreen(
                 }
                 is LayerItem.Text -> {
                     val tb = layer.textBox
+                    val textToDraw = if (tb.isAllCaps) tb.text.uppercase() else tb.text
+                    val x = tb.xPercent * base.width
+                    val y = tb.yPercent * base.height
+
+                    canvas.save()
+                    if (tb.rotation != 0f) {
+                        canvas.rotate(tb.rotation, x, y)
+                    }
+
                     val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                         color = tb.textColor.toInt()
                         textSize = base.width * (tb.fontSizeSp / 350f)
@@ -286,18 +278,51 @@ fun PhotoStudioScreen(
                             "right" -> android.graphics.Paint.Align.RIGHT
                             else -> android.graphics.Paint.Align.CENTER
                         }
-                        typeface = if (tb.isBold) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
+                        typeface = TextOverlayUtils.resolveTypeface(context, tb.fontId, tb.isBold, tb.isItalic)
+                        if (tb.hasShadow) {
+                            setShadowLayer(tb.shadowRadius, tb.shadowDx, tb.shadowDy, tb.shadowColor.toInt())
+                        }
                     }
-                    val strokePaint = android.graphics.Paint(paint).apply {
-                        style = android.graphics.Paint.Style.STROKE
-                        strokeWidth = paint.textSize * 0.12f
-                        color = tb.strokeColor.toInt()
+
+                    // Draw background banner/highlight if enabled
+                    if (tb.hasBackground) {
+                        val bounds = android.graphics.Rect()
+                        paint.getTextBounds(textToDraw, 0, textToDraw.length, bounds)
+                        val pad = paint.textSize * 0.25f
+                        val bgRect = android.graphics.RectF(
+                            when (tb.textAlign) {
+                                "left" -> x - pad
+                                "right" -> x - bounds.width() - pad
+                                else -> x - (bounds.width() / 2f) - pad
+                            },
+                            y - bounds.height() - pad,
+                            when (tb.textAlign) {
+                                "left" -> x + bounds.width() + pad
+                                "right" -> x + pad
+                                else -> x + (bounds.width() / 2f) + pad
+                            },
+                            y + pad
+                        )
+                        val bgPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                            color = tb.backgroundColor.toInt()
+                        }
+                        canvas.drawRoundRect(bgRect, 8f, 8f, bgPaint)
                     }
-                    val textToDraw = if (tb.isAllCaps) tb.text.uppercase() else tb.text
-                    val x = tb.xPercent * base.width
-                    val y = tb.yPercent * base.height
-                    canvas.drawText(textToDraw, x, y, strokePaint)
+
+                    // Draw outline stroke pass
+                    if (tb.hasStroke) {
+                        val strokePaint = android.graphics.Paint(paint).apply {
+                            style = android.graphics.Paint.Style.STROKE
+                            strokeWidth = paint.textSize * (tb.strokeWidth / 30f)
+                            color = tb.strokeColor.toInt()
+                            clearShadowLayer()
+                        }
+                        canvas.drawText(textToDraw, x, y, strokePaint)
+                    }
+
+                    // Main text fill pass with shadow
                     canvas.drawText(textToDraw, x, y, paint)
+                    canvas.restore()
                 }
             }
         }
@@ -333,6 +358,18 @@ fun PhotoStudioScreen(
                         }
                     }
 
+                    // Quick Filter Bottom Sheet button
+                    IconButton(
+                        onClick = { showFilterBottomSheet = true },
+                        modifier = Modifier.testTag("top_bar_filter_sheet_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoFixHigh,
+                            contentDescription = "ColorMatrix Filters Sheet",
+                            tint = if (adjustment.filterPreset != "none") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
                     // Undo button
                     IconButton(
                         onClick = {
@@ -362,6 +399,18 @@ fun PhotoStudioScreen(
                         Icon(imageVector = Icons.Default.Refresh, contentDescription = "Reset")
                     }
 
+                    // Gallery image upload button
+                    IconButton(
+                        onClick = {
+                            galleryLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        modifier = Modifier.testTag("top_bar_gallery_button")
+                    ) {
+                        Icon(imageVector = Icons.Default.PhotoLibrary, contentDescription = "Upload Gallery Photo")
+                    }
+
                     // Native Share button
                     IconButton(
                         onClick = {
@@ -378,20 +427,15 @@ fun PhotoStudioScreen(
                         onClick = {
                             scope.launch {
                                 isProcessing = true
-                                try {
-                                    val finalBmp = generateFinalBitmap()
-                                    val uri = BitmapUtils.saveBitmapToGallery(context, finalBmp)
-                                    repository.saveCreation(finalBmp, "Edited Photo", "photo")
-                                    Toast.makeText(
-                                        context,
-                                        if (uri != null) "Saved to Gallery and Creations" else "Saved to My Creations; Gallery save failed",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                } catch (_: Exception) {
-                                    Toast.makeText(context, "Couldn't save photo. Please try again.", Toast.LENGTH_LONG).show()
-                                } finally {
-                                    isProcessing = false
-                                }
+                                val finalBmp = generateFinalBitmap()
+                                val uri = BitmapUtils.saveBitmapToGallery(context, finalBmp)
+                                repository.saveCreation(finalBmp, "Edited Photo", "photo")
+                                isProcessing = false
+                                Toast.makeText(
+                                    context,
+                                    if (uri != null) "Saved to Gallery & Creations!" else "Saved to My Creations!",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
                         },
                         modifier = Modifier.testTag("save_button")
@@ -477,6 +521,15 @@ fun PhotoStudioScreen(
                                         }
                                         is LayerItem.Text -> {
                                             val tb = layer.textBox
+                                            val textStr = if (tb.isAllCaps) tb.text.uppercase() else tb.text
+                                            val tx = left + tb.xPercent * destW
+                                            val ty = top + tb.yPercent * destH
+
+                                            nativeCanvas.nativeCanvas.save()
+                                            if (tb.rotation != 0f) {
+                                                nativeCanvas.nativeCanvas.rotate(tb.rotation, tx, ty)
+                                            }
+
                                             val tPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                                                 color = tb.textColor.toInt()
                                                 textSize = destW * (tb.fontSizeSp / 350f)
@@ -485,18 +538,47 @@ fun PhotoStudioScreen(
                                                     "right" -> android.graphics.Paint.Align.RIGHT
                                                     else -> android.graphics.Paint.Align.CENTER
                                                 }
-                                                typeface = if (tb.isBold) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
+                                                typeface = TextOverlayUtils.resolveTypeface(context, tb.fontId, tb.isBold, tb.isItalic)
+                                                if (tb.hasShadow) {
+                                                    setShadowLayer(tb.shadowRadius, tb.shadowDx, tb.shadowDy, tb.shadowColor.toInt())
+                                                }
                                             }
-                                            val sPaint = android.graphics.Paint(tPaint).apply {
-                                                style = android.graphics.Paint.Style.STROKE
-                                                strokeWidth = tPaint.textSize * 0.12f
-                                                color = tb.strokeColor.toInt()
+
+                                            if (tb.hasBackground) {
+                                                val bounds = android.graphics.Rect()
+                                                tPaint.getTextBounds(textStr, 0, textStr.length, bounds)
+                                                val pad = tPaint.textSize * 0.25f
+                                                val bgRect = android.graphics.RectF(
+                                                    when (tb.textAlign) {
+                                                        "left" -> tx - pad
+                                                        "right" -> tx - bounds.width() - pad
+                                                        else -> tx - (bounds.width() / 2f) - pad
+                                                    },
+                                                    ty - bounds.height() - pad,
+                                                    when (tb.textAlign) {
+                                                        "left" -> tx + bounds.width() + pad
+                                                        "right" -> tx + pad
+                                                        else -> tx + (bounds.width() / 2f) + pad
+                                                    },
+                                                    ty + pad
+                                                )
+                                                val bgPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                                                    color = tb.backgroundColor.toInt()
+                                                }
+                                                nativeCanvas.nativeCanvas.drawRoundRect(bgRect, 8f, 8f, bgPaint)
                                             }
-                                            val textStr = if (tb.isAllCaps) tb.text.uppercase() else tb.text
-                                            val tx = left + tb.xPercent * destW
-                                            val ty = top + tb.yPercent * destH
-                                            nativeCanvas.nativeCanvas.drawText(textStr, tx, ty, sPaint)
+
+                                            if (tb.hasStroke) {
+                                                val sPaint = android.graphics.Paint(tPaint).apply {
+                                                    style = android.graphics.Paint.Style.STROKE
+                                                    strokeWidth = tPaint.textSize * (tb.strokeWidth / 30f)
+                                                    color = tb.strokeColor.toInt()
+                                                    clearShadowLayer()
+                                                }
+                                                nativeCanvas.nativeCanvas.drawText(textStr, tx, ty, sPaint)
+                                            }
                                             nativeCanvas.nativeCanvas.drawText(textStr, tx, ty, tPaint)
+                                            nativeCanvas.nativeCanvas.restore()
                                         }
                                     }
                                 }
@@ -630,7 +712,7 @@ fun PhotoStudioScreen(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp),
+                    .height(200.dp),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 4.dp
             ) {
@@ -641,58 +723,62 @@ fun PhotoStudioScreen(
                 ) {
                     when (currentTab) {
                         StudioTab.FILTERS -> {
-                            Row(
+                            Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .fillMaxSize()
+                                    .verticalScroll(rememberScrollState())
                             ) {
-                                AVAILABLE_FILTER_PRESETS.forEach { preset ->
-                                    val isSelected = adjustment.filterPreset == preset.id
-                                    Card(
-                                        modifier = Modifier
-                                            .width(74.dp)
-                                            .clickable {
-                                                adjustment = adjustment.copy(filterPreset = preset.id)
-                                                history = history.take(historyIndex + 1) + adjustment
-                                                historyIndex++
-                                            }
-                                            .testTag("filter_preset_${preset.id}"),
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-                                        ),
-                                        border = if (isSelected) CardDefaults.outlinedCardBorder().copy(width = 2.dp) else null
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.AutoFixHigh,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "ColorMatrix Filters",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = { showFilterBottomSheet = true },
+                                        modifier = Modifier.testTag("open_filter_bottom_sheet_btn")
                                     ) {
-                                        Column(
-                                            modifier = Modifier.padding(6.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(46.dp)
-                                                    .clip(RoundedCornerShape(8.dp))
-                                                    .background(Color(preset.previewHue)),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(
-                                                    text = preset.name.take(2).uppercase(),
-                                                    color = Color.White,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 14.sp
-                                                )
-                                            }
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = preset.name,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                textAlign = TextAlign.Center,
-                                                maxLines = 1
-                                            )
-                                        }
+                                        Icon(
+                                            imageVector = Icons.Default.OpenInFull,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Expand Sheet", fontSize = 12.sp)
                                     }
                                 }
+
+                                ImageFilterCarousel(
+                                    selectedPreset = adjustment.filterPreset,
+                                    onSelectPreset = { presetId ->
+                                        adjustment = adjustment.copy(filterPreset = presetId)
+                                        history = history.take(historyIndex + 1) + adjustment
+                                        historyIndex++
+                                    },
+                                    filterIntensity = adjustment.filterIntensity,
+                                    onIntensityChange = { newIntensity ->
+                                        adjustment = adjustment.copy(filterIntensity = newIntensity)
+                                    },
+                                    previewBitmap = previewBitmap ?: sourceBitmap,
+                                    showCategoryChips = true,
+                                    showIntensitySlider = true
+                                )
                             }
                         }
 
@@ -900,93 +986,52 @@ fun PhotoStudioScreen(
         }
     }
 
-    // Modal Sheet for Editing Selected Text Box
+    // Modal Sheet for Editing Selected Text Overlay
     if (showTextSheet && activeTextBox != null) {
         val target = activeTextBox!!
-        var textContent by remember { mutableStateOf(target.text) }
-        var fontSize by remember { mutableFloatStateOf(target.fontSizeSp) }
-        var isBold by remember { mutableStateOf(target.isBold) }
-        var isCaps by remember { mutableStateOf(target.isAllCaps) }
-        var textColor by remember { mutableStateOf(target.textColor) }
-        var strokeColor by remember { mutableStateOf(target.strokeColor) }
-
-        ModalBottomSheet(
+        TextOverlayEditorSheet(
+            textBox = target,
             onDismissRequest = { showTextSheet = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text("Edit Text Overlay", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedTextField(
-                    value = textContent,
-                    onValueChange = {
-                        textContent = it
-                        target.text = it
-                    },
-                    label = { Text("Text message") },
-                    modifier = Modifier.fillMaxWidth().testTag("text_input_field")
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                ValueSliderRow(
-                    label = "Font Size",
-                    value = fontSize,
-                    range = 14f..64f,
-                    onValueChange = {
-                        fontSize = it
-                        target.fontSizeSp = it
-                    }
-                )
-                Text("Text Color", style = MaterialTheme.typography.labelMedium)
-                PaletteColorPicker(
-                    selectedColor = textColor,
-                    onColorSelected = {
-                        textColor = it
-                        target.textColor = it
-                    }
-                )
-                Text("Stroke / Outline Color", style = MaterialTheme.typography.labelMedium)
-                PaletteColorPicker(
-                    selectedColor = strokeColor,
-                    onColorSelected = {
-                        strokeColor = it
-                        target.strokeColor = it
-                    }
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterChip(
-                        selected = isBold,
-                        onClick = {
-                            isBold = !isBold
-                            target.isBold = isBold
-                        },
-                        label = { Text("Bold") }
-                    )
-                    FilterChip(
-                        selected = isCaps,
-                        onClick = {
-                            isCaps = !isCaps
-                            target.isAllCaps = isCaps
-                        },
-                        label = { Text("ALL CAPS") }
-                    )
+            onApply = { updated ->
+                val idx = textBoxes.indexOfFirst { it.id == updated.id }
+                if (idx != -1) {
+                    textBoxes[idx] = updated
                 }
-                Spacer(modifier = Modifier.height(14.dp))
-                Button(
-                    onClick = { showTextSheet = false },
-                    modifier = Modifier.fillMaxWidth().testTag("text_sheet_done_btn")
-                ) {
-                    Text("Apply & Close")
-                }
+                activeTextBox = updated
+                showTextSheet = false
             }
-        }
+        )
+    }
+
+    // Modal Sheet for Image Filters (ColorMatrix)
+    if (showFilterBottomSheet) {
+        ImageFilterBottomSheet(
+            onDismissRequest = { showFilterBottomSheet = false },
+            activePreset = adjustment.filterPreset,
+            onPresetChange = { presetId ->
+                adjustment = adjustment.copy(filterPreset = presetId)
+                history = history.take(historyIndex + 1) + adjustment
+                historyIndex++
+            },
+            filterIntensity = adjustment.filterIntensity,
+            onFilterIntensityChange = { newIntensity ->
+                adjustment = adjustment.copy(filterIntensity = newIntensity)
+            },
+            previewBitmap = previewBitmap ?: sourceBitmap,
+            brightness = adjustment.brightness,
+            onBrightnessChange = { adjustment = adjustment.copy(brightness = it) },
+            contrast = adjustment.contrast,
+            onContrastChange = { adjustment = adjustment.copy(contrast = it) },
+            saturation = adjustment.saturation,
+            onSaturationChange = { adjustment = adjustment.copy(saturation = it) },
+            warmth = adjustment.warmth,
+            onWarmthChange = { adjustment = adjustment.copy(warmth = it) },
+            onResetAll = {
+                adjustment = PhotoAdjustment()
+                history = history.take(historyIndex + 1) + adjustment
+                historyIndex++
+            }
+        )
     }
 
     // Modal Sheet for Stickers

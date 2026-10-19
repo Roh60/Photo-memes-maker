@@ -15,10 +15,12 @@ data class PhotoTemplate(
     val aspectRatio: Float = 1.0f, // 1.0f (1:1), 0.8f (4:5), 0.5625f (9:16)
     val decorativeEmoji: String = "✨",
     val cornerDecorEmoji: String = "🎉",
-    val textColor: Long = 0xFFFFFFFF
+    val textColor: Long = 0xFFFFFFFF,
+    val isPremium: Boolean = false
 )
 
 enum class TemplateCategory {
+    PREMIUM,
     FESTIVAL,
     STYLISH
 }
@@ -311,137 +313,194 @@ object TemplateRepository {
             decorativeEmoji = "💎",
             cornerDecorEmoji = "✨"
         )
-        ,
-        PhotoTemplate(
-            id = "good_night_moonlight",
-            name = "Moonlight Good Night",
-            category = TemplateCategory.FESTIVAL,
-            subCategory = "Good Night",
-            headerTitle = "🌙 GOOD NIGHT 🌙",
-            defaultGreeting = "Let the moonlight bring you peaceful dreams.",
-            footerQuote = "#GoodNight #SweetDreams",
-            gradientColors = listOf(0xFF0F172A, 0xFF312E81, 0xFF818CF8),
-            frameShape = "rounded",
-            decorativeEmoji = "🌙",
-            cornerDecorEmoji = "✨"
-        ),
-        PhotoTemplate(
-            id = "hindi_suvichar",
-            name = "Hindi Suvichar",
-            category = TemplateCategory.STYLISH,
-            subCategory = "Hindi Suvichar",
-            headerTitle = "✨ आज का सुविचार ✨",
-            defaultGreeting = "सकारात्मक सोच और निरंतर प्रयास सफलता की राह बनाते हैं।",
-            footerQuote = "#सुविचार #प्रेरणा",
-            gradientColors = listOf(0xFF78350F, 0xFFB45309, 0xFFFDE68A),
-            frameShape = "rounded",
-            decorativeEmoji = "🌼",
-            cornerDecorEmoji = "✨"
-        ),
-        PhotoTemplate(
-            id = "hindi_shayari",
-            name = "Dil Se Shayari",
-            category = TemplateCategory.STYLISH,
-            subCategory = "Hindi Shayari",
-            headerTitle = "❤️ दिल की बात ❤️",
-            defaultGreeting = "कुछ एहसास लफ़्ज़ों में नहीं, बस दिल में रहते हैं।",
-            footerQuote = "#Shayari #DilSe",
-            gradientColors = listOf(0xFF4C0519, 0xFF9F1239, 0xFFF9A8D4),
-            frameShape = "rounded",
-            decorativeEmoji = "🌹",
-            cornerDecorEmoji = "💗"
-        ),
-        PhotoTemplate(
-            id = "devotional_blessings",
-            name = "Divine Blessings",
-            category = TemplateCategory.FESTIVAL,
-            subCategory = "Devotional",
-            headerTitle = "🙏 शुभ आशीर्वाद 🙏",
-            defaultGreeting = "आपके जीवन में शांति, प्रेम और सुख-समृद्धि बनी रहे।",
-            footerQuote = "#Blessings #PositiveVibes",
-            gradientColors = listOf(0xFF7C2D12, 0xFFEA580C, 0xFFFDE68A),
-            frameShape = "circle",
-            decorativeEmoji = "🪔",
-            cornerDecorEmoji = "🙏"
-        ),
-        PhotoTemplate(
-            id = "retro_vintage",
-            name = "Retro Vintage Memories",
-            category = TemplateCategory.STYLISH,
-            subCategory = "Retro & Vintage",
-            headerTitle = "📸 TIMELESS MEMORIES",
-            defaultGreeting = "Some moments become memories; some stay forever.",
-            footerQuote = "#RetroStyle #Memories",
-            gradientColors = listOf(0xFF713F12, 0xFFB45309, 0xFFFDE68A),
-            frameShape = "rect",
-            decorativeEmoji = "🎞️",
-            cornerDecorEmoji = "✨"
-        ),
-        PhotoTemplate(
-            id = "travel_diaries",
-            name = "Travel Diary",
-            category = TemplateCategory.STYLISH,
-            subCategory = "Travel & Lifestyle",
-            headerTitle = "🌍 COLLECT MOMENTS",
-            defaultGreeting = "Travel far enough to meet a new version of yourself.",
-            footerQuote = "#TravelDiaries #ExploreMore",
-            gradientColors = listOf(0xFF164E63, 0xFF0E7490, 0xFF67E8F9),
-            frameShape = "rect",
-            decorativeEmoji = "✈️",
-            cornerDecorEmoji = "🌴"
-        ),
-        PhotoTemplate(
-            id = "birthday_celebration_luxe",
-            name = "Birthday Celebration Luxe",
-            category = TemplateCategory.FESTIVAL,
-            subCategory = "Birthday",
-            headerTitle = "🎂 HAPPY BIRTHDAY 🎂",
-            defaultGreeting = "Wishing you a year filled with laughter, love and beautiful surprises!",
-            footerQuote = "#BirthdayWishes #CelebrateYou",
-            gradientColors = listOf(0xFF701A75, 0xFFBE185D, 0xFFF9A8D4),
-            frameShape = "rounded",
-            decorativeEmoji = "🎁",
-            cornerDecorEmoji = "🎉"
-        ),
-        PhotoTemplate(
-            id = "motivation_new_day",
-            name = "New Day Motivation",
-            category = TemplateCategory.STYLISH,
-            subCategory = "Motivational Quotes",
-            headerTitle = "🔥 KEEP MOVING FORWARD 🔥",
-            defaultGreeting = "Small steps every day can lead to extraordinary changes.",
-            footerQuote = "#Motivation #NeverGiveUp",
-            gradientColors = listOf(0xFF172554, 0xFF1D4ED8, 0xFF60A5FA),
-            frameShape = "rounded",
-            decorativeEmoji = "🌅",
-            cornerDecorEmoji = "⭐"
-        )
+    )
 
+    val PREMIUM_TEMPLATES = listOf(
+        PhotoTemplate(
+            id = "royal_gold_wedding",
+            name = "Royal Vivah Gold",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Wedding & Royalty",
+            headerTitle = "👑 SHREE VIVAH UTSAV 👑",
+            defaultGreeting = "Two souls, two hearts, joined in sacred celebration of lifelong love & harmony.",
+            footerQuote = "#RoyalWedding #TogetherForever #GoldenBond",
+            gradientColors = listOf(0xFF1E1035, 0xFF4A0E2E, 0xFFB45309, 0xFFFBBF24),
+            frameShape = "circle",
+            frameBorderColor = 0xFFFDE047,
+            frameBorderWidthDp = 5f,
+            decorativeEmoji = "👑",
+            cornerDecorEmoji = "✨",
+            isPremium = true
+        ),
+        PhotoTemplate(
+            id = "vintage_polaroid_nostalgia",
+            name = "Retro Polaroid Film",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Vintage & Nostalgia",
+            headerTitle = "📸 TIMELESS MEMORIES 📸",
+            defaultGreeting = "Caught between nostalgic amber sunbeams and unforgettable golden days.",
+            footerQuote = "#VintageFilm #RetroAesthetic #PolaroidMoments",
+            gradientColors = listOf(0xFF1C1917, 0xFF292524, 0xFF44403C),
+            frameShape = "rect",
+            frameBorderColor = 0xFFFEF3C7,
+            frameBorderWidthDp = 6f,
+            decorativeEmoji = "📸",
+            cornerDecorEmoji = "🎞️",
+            isPremium = true
+        ),
+        PhotoTemplate(
+            id = "cyberpunk_neon_edge",
+            name = "Cyberpunk 2077 HUD",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Cyber & Tech",
+            headerTitle = "⚡ SYSTEM OVERDRIVE ⚡",
+            defaultGreeting = "Neon reflections in electric rain; living beyond digital boundaries.",
+            footerQuote = "#CyberVibes #Synthwave #NeonPulse",
+            gradientColors = listOf(0xFF030712, 0xFF1E1B4B, 0xFF0E7490),
+            frameShape = "rounded",
+            frameBorderColor = 0xFF22D3EE,
+            frameBorderWidthDp = 4f,
+            decorativeEmoji = "👾",
+            cornerDecorEmoji = "⚡",
+            isPremium = true
+        ),
+        PhotoTemplate(
+            id = "vogue_haute_couture",
+            name = "Paris Haute Couture",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Luxury Fashion",
+            headerTitle = "🌟 VOGUE GLOBAL ISSUE 🌟",
+            defaultGreeting = "High elegance, fearless couture, and iconic personal charisma.",
+            footerQuote = "#VogueCover #HauteCouture #Supermodel",
+            gradientColors = listOf(0xFF09090B, 0xFF18181B, 0xFF831843),
+            frameShape = "rect",
+            frameBorderColor = 0xFFFFFFFF,
+            frameBorderWidthDp = 3f,
+            decorativeEmoji = "💎",
+            cornerDecorEmoji = "🌟",
+            isPremium = true
+        ),
+        PhotoTemplate(
+            id = "sunset_golden_glow",
+            name = "Aesthetic Golden Hour",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Aesthetic Glow",
+            headerTitle = "🌅 GOLDEN HOUR MAGIC 🌅",
+            defaultGreeting = "Basked in honey sunlight, soft warm breezes, and pure summer bliss.",
+            footerQuote = "#GoldenHour #WarmTones #SunKissed",
+            gradientColors = listOf(0xFF451A03, 0xFF92400E, 0xFFF59E0B),
+            frameShape = "circle",
+            frameBorderColor = 0xFFFEF08A,
+            frameBorderWidthDp = 4f,
+            decorativeEmoji = "🌅",
+            cornerDecorEmoji = "✨",
+            isPremium = true
+        ),
+        PhotoTemplate(
+            id = "bappa_royal_aarti",
+            name = "Siddhivinayak Darshan",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Ganesh Special",
+            headerTitle = "🌺 VIGHNAHARTA BLESSINGS 🌺",
+            defaultGreeting = "May Ganpati Bappa shower divine wisdom, immense health, and royal prosperity!",
+            footerQuote = "#Siddhivinayak #JaiGanesh #BappaMorya",
+            gradientColors = listOf(0xFF450A0A, 0xFF7C2D12, 0xFFEA580C),
+            frameShape = "rounded",
+            frameBorderColor = 0xFFFDE047,
+            frameBorderWidthDp = 5f,
+            decorativeEmoji = "🌺",
+            cornerDecorEmoji = "🕉️",
+            isPremium = true
+        ),
+        PhotoTemplate(
+            id = "bholenath_trinetra",
+            name = "Mahadev Shiv Shambhu",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Shivratri & Devotion",
+            headerTitle = "🔱 HAR HAR MAHADEV 🔱",
+            defaultGreeting = "Om Namah Shivaya! In cosmic tranquility lies infinite spiritual power.",
+            footerQuote = "#Bholenath #ShivShambhu #MahakalBlessings",
+            gradientColors = listOf(0xFF020617, 0xFF0F172A, 0xFF1E3A8A),
+            frameShape = "circle",
+            frameBorderColor = 0xFF38BDF8,
+            frameBorderWidthDp = 4f,
+            decorativeEmoji = "🔱",
+            cornerDecorEmoji = "🕉️",
+            isPremium = true
+        ),
+        PhotoTemplate(
+            id = "desi_bollywood_swag",
+            name = "Blockbuster Hero Swag",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Bollywood Masala",
+            headerTitle = "🔥 APNA TIME AAYEGA 🔥",
+            defaultGreeting = "Kaha tha na humara jalwa hai, tha aur hamesha rahega!",
+            footerQuote = "#DesiSwag #FullOnTashan #BlockbusterHero",
+            gradientColors = listOf(0xFF3B0764, 0xFF831843, 0xFFDC2626),
+            frameShape = "rect",
+            frameBorderColor = 0xFFFACC15,
+            frameBorderWidthDp = 5f,
+            decorativeEmoji = "🔥",
+            cornerDecorEmoji = "🎬",
+            isPremium = true
+        ),
+        PhotoTemplate(
+            id = "karwa_chauth_chand",
+            name = "Karwa Chauth Moon",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Love & Tradition",
+            headerTitle = "🌙 SHUBH KARWA CHAUTH 🌙",
+            defaultGreeting = "Praying for your long life, endless happiness, and unconditional companionship.",
+            footerQuote = "#KarwaChauthSpecial #MoonlightLove #Suhaag",
+            gradientColors = listOf(0xFF4C0519, 0xFF881337, 0xFFBE123C),
+            frameShape = "circle",
+            frameBorderColor = 0xFFFDE047,
+            frameBorderWidthDp = 4f,
+            decorativeEmoji = "🌙",
+            cornerDecorEmoji = "🌹",
+            isPremium = true
+        ),
+        PhotoTemplate(
+            id = "executive_leader_pro",
+            name = "Forbes Executive Spotlight",
+            category = TemplateCategory.PREMIUM,
+            subCategory = "Business & Leader",
+            headerTitle = "💼 30 UNDER 30 VISIONARY 💼",
+            defaultGreeting = "Transforming the future with bold strategy, resilience, and vision.",
+            footerQuote = "#LeaderSpotlight #ForbesAesthetic #GameChanger",
+            gradientColors = listOf(0xFF030712, 0xFF111827, 0xFF1F2937),
+            frameShape = "rect",
+            frameBorderColor = 0xFF38BDF8,
+            frameBorderWidthDp = 3f,
+            decorativeEmoji = "🎯",
+            cornerDecorEmoji = "⭐",
+            isPremium = true
+        )
     )
 
     val TRENDING_DESIGNS: List<PhotoTemplate> by lazy {
         listOf(
+            getTemplateById("royal_gold_wedding") ?: PREMIUM_TEMPLATES[0],
             getTemplateById("magazine_vogue") ?: STYLISH_TEMPLATES[0],
             getTemplateById("diwali_royal") ?: FESTIVAL_TEMPLATES[0],
-            getTemplateById("neon_cyber") ?: STYLISH_TEMPLATES[1],
-            getTemplateById("golden_hour") ?: STYLISH_TEMPLATES[2],
-            getTemplateById("holi_colors") ?: FESTIVAL_TEMPLATES[1],
-            getTemplateById("aesthetic_pastel") ?: STYLISH_TEMPLATES[3]
+            getTemplateById("cyberpunk_neon_edge") ?: PREMIUM_TEMPLATES[2],
+            getTemplateById("bappa_royal_aarti") ?: PREMIUM_TEMPLATES[5],
+            getTemplateById("sunset_golden_glow") ?: PREMIUM_TEMPLATES[4]
         )
     }
 
     val NEW_TEMPLATES: List<PhotoTemplate> by lazy {
         listOf(
-            getTemplateById("new_year") ?: FESTIVAL_TEMPLATES[7],
-            getTemplateById("cinematic_mood") ?: STYLISH_TEMPLATES[4],
-            getTemplateById("good_morning_vibes") ?: FESTIVAL_TEMPLATES[11],
-            getTemplateById("polaroid_vintage") ?: STYLISH_TEMPLATES[5],
-            getTemplateById("birthday_bash") ?: FESTIVAL_TEMPLATES[9],
-            getTemplateById("monochrome_minimal") ?: STYLISH_TEMPLATES[6]
+            getTemplateById("vintage_polaroid_nostalgia") ?: PREMIUM_TEMPLATES[1],
+            getTemplateById("vogue_haute_couture") ?: PREMIUM_TEMPLATES[3],
+            getTemplateById("bholenath_trinetra") ?: PREMIUM_TEMPLATES[6],
+            getTemplateById("desi_bollywood_swag") ?: PREMIUM_TEMPLATES[7],
+            getTemplateById("karwa_chauth_chand") ?: PREMIUM_TEMPLATES[8],
+            getTemplateById("executive_leader_pro") ?: PREMIUM_TEMPLATES[9]
         )
     }
 
-    fun getAllTemplates(): List<PhotoTemplate> = FESTIVAL_TEMPLATES + STYLISH_TEMPLATES
+    fun getAllTemplates(): List<PhotoTemplate> = PREMIUM_TEMPLATES + FESTIVAL_TEMPLATES + STYLISH_TEMPLATES
 
     fun getTemplateById(id: String): PhotoTemplate? =
         getAllTemplates().firstOrNull { it.id == id }

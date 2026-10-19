@@ -182,7 +182,3 @@ fun PaletteColorPicker(
         }
     }
 }
-
-/**
- * Clean monetization placeholder: Creative studio sponsor slot that doesn't obstruct controls
- */

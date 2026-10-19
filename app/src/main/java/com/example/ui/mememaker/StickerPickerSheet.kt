@@ -83,17 +83,22 @@ fun StickerPickerModalBottomSheet(
     val categories = listOf(
         "All",
         "Trending",
-        "Glasses & Props",
+        "Reactions & Drama",
         "Badges & Stamps",
+        "Glasses & Props",
         "Bubbles & Bursts",
-        "Emojis"
+        "Viral Memes",
+        "Desi & Festive",
+        "Attitude",
+        "Love"
     )
 
     val filteredDrawables = remember(selectedCategory, searchQuery) {
-        val list = if (selectedCategory == "All" || selectedCategory == "Emojis") {
-            StickerLibrary.DRAWABLE_STICKERS
-        } else {
-            StickerLibrary.getDrawableStickersByCategory(selectedCategory)
+        val list = when (selectedCategory) {
+            "All" -> StickerLibrary.DRAWABLE_STICKERS
+            "Trending", "Glasses & Props", "Badges & Stamps", "Reactions & Drama", "Bubbles & Bursts" ->
+                StickerLibrary.getDrawableStickersByCategory(selectedCategory)
+            else -> emptyList()
         }
         if (searchQuery.isBlank()) list else {
             list.filter {
@@ -105,15 +110,18 @@ fun StickerPickerModalBottomSheet(
     }
 
     val filteredEmojis = remember(selectedCategory, searchQuery) {
-        if (selectedCategory != "All" && selectedCategory != "Emojis") {
-            emptyList()
-        } else {
-            val list = StickerLibrary.STICKERS
-            if (searchQuery.isBlank()) list else {
-                list.filter {
-                    it.label.contains(searchQuery, ignoreCase = true) ||
-                            it.category.contains(searchQuery, ignoreCase = true)
-                }
+        val list = when (selectedCategory) {
+            "All" -> StickerLibrary.STICKERS
+            "Viral Memes" -> StickerLibrary.getStickersByCategory("Meme")
+            "Desi & Festive" -> StickerLibrary.getStickersByCategory("Desi & Festive") + StickerLibrary.getStickersByCategory("Festivals")
+            "Attitude" -> StickerLibrary.getStickersByCategory("Attitude")
+            "Love" -> StickerLibrary.getStickersByCategory("Love")
+            else -> emptyList()
+        }
+        if (searchQuery.isBlank()) list else {
+            list.filter {
+                it.label.contains(searchQuery, ignoreCase = true) ||
+                        it.category.contains(searchQuery, ignoreCase = true)
             }
         }
     }
@@ -261,8 +269,8 @@ fun StickerPickerModalBottomSheet(
                     }
                 }
 
-                // Section: Emoji items (when in All or Emojis category)
-                if (selectedCategory == "All" || selectedCategory == "Emojis") {
+                // Section: Emoji items
+                if (filteredEmojis.isNotEmpty()) {
                     items(filteredEmojis, key = { "emoji_${it.label}_${it.emoji}" }) { emojiItem ->
                         Card(
                             modifier = Modifier

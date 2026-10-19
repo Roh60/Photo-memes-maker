@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Mic Drop / Savage Punchline Sticker -->
+    <!-- Microphone Head -->
+    <path
+        android:fillColor="#78909C"
+        android:pathData="M38,20 C38,14 42,10 48,10 C54,10 58,14 58,20 L58,34 C58,40 54,44 48,44 C42,44 38,40 38,34 Z" />
+    <!-- Microphone Handle -->
+    <path
+        android:fillColor="#37474F"
+        android:pathData="M44,44 L40,78 L56,78 L52,44 Z" />
+    <!-- Cord and Sparks -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M48,78 C48,84 40,88 44,92 L52,92 C48,88 50,84 48,78 Z" />
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M24,48 L32,52 L26,56 Z M72,48 L64,52 L70,56 Z M20,24 L28,28 L22,32 Z M76,24 L68,28 L74,32 Z" />
+</vector>

@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Skull / "I'm Dead" Laughing Meme Sticker -->
+    <path
+        android:fillColor="#ECEFF1"
+        android:pathData="M48,16 C28,16 20,32 20,48 C20,60 28,68 32,70 L34,80 L62,80 L64,70 C68,68 76,60 76,48 C76,32 68,16 48,16 Z" />
+    <!-- Eye Sockets -->
+    <path
+        android:fillColor="#263238"
+        android:pathData="M34,44 m-8,0 a8,10 0 1,0 16,0 a8,10 0 1,0 -16,0 M62,44 m-8,0 a8,10 0 1,0 16,0 a8,10 0 1,0 -16,0" />
+    <!-- Nose Cavity -->
+    <path
+        android:fillColor="#263238"
+        android:pathData="M48,54 L44,64 L52,64 Z" />
+    <!-- Teeth -->
+    <path
+        android:fillColor="#263238"
+        android:pathData="M38,72 h4 v6 h-4 z M46,72 h4 v6 h-4 z M54,72 h4 v6 h-4 z" />
+</vector>
